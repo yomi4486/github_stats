@@ -115,13 +115,13 @@
 			<div class="card">
 				<h4>GitHub README埋め込み</h4>
 				<div class="code-block">
-					<code>![Developer Score](https://yoursite.com/api/stats/{username})</code>
+					<code>![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/{username})</code>
 				</div>
 			</div>
 			<div class="card">
 				<h4>HTML埋め込み</h4>
 				<div class="code-block">
-					<code>&lt;img src="https://yoursite.com/api/stats/{username}" alt="Developer Score"&gt;</code>
+					<code>&lt;img src="https://github-stats-eta-two.vercel.app/api/stats/{username}" alt="Developer Score"&gt;</code>
 				</div>
 				<p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
 					Webサイトやポートフォリオに
