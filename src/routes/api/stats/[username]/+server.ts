@@ -260,6 +260,16 @@ function generateSVG(stats: GitHubStats): string {
 	
 	const scoreInfo = getScoreInfo(score);
 	
+	// 数値をフォーマットする関数
+	function formatNumber(num: number): string {
+		if (num >= 1000000) {
+			return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+		} else if (num >= 1000) {
+			return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+		}
+		return num.toString();
+	}
+	
 	// 言語の色マッピング
 	const languageColors: Record<string, string> = {
 		JavaScript: '#f1e05a',
@@ -295,12 +305,6 @@ function generateSVG(stats: GitHubStats): string {
 						<feMergeNode in="SourceGraphic"/>
 					</feMerge>
 				</filter>
-				<clipPath id="avatar-clip">
-					<circle cx="60" cy="60" r="18"/>
-				</clipPath>
-				<pattern id="avatar-pattern" patternUnits="objectBoundingBox" width="1" height="1">
-					<image x="0" y="0" width="36" height="36" href="${user.avatar_url}" preserveAspectRatio="xMidYMid slice"/>
-				</pattern>
 			</defs>
 			
 			<!-- Background -->
@@ -310,9 +314,11 @@ function generateSVG(stats: GitHubStats): string {
 			<!-- Left Section: User Info & Score -->
 			<rect x="20" y="20" width="280" height="360" fill="${colors.cardBg}" rx="8" opacity="0.8"/>
 			
-			<!-- Avatar Image -->
-			<circle cx="60" cy="60" r="20" fill="${colors.border}" stroke="${colors.accent}" stroke-width="2"/>
-			<circle cx="60" cy="60" r="18" fill="url(#avatar-pattern)"/>
+			<!-- User Avatar (GitHub Icon) -->
+			<circle cx="60" cy="60" r="20" fill="${colors.accent}" stroke="${colors.border}" stroke-width="2"/>
+			<text x="60" y="68" fill="${colors.background}" font-family="Inter, -apple-system, sans-serif" font-size="24" font-weight="700" text-anchor="middle">
+				${(user.name || user.login).charAt(0).toUpperCase()}
+			</text>
 			
 			<!-- User Info -->
 			<text x="90" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="20" font-weight="700" text-anchor="start">
@@ -340,7 +346,7 @@ function generateSVG(stats: GitHubStats): string {
 					📊 Quick Stats
 				</text>
 				<text x="0" y="30" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					📝 ${(totalLines / 1000).toFixed(1)}K lines
+					📝 ${formatNumber(totalLines)} lines
 				</text>
 				<text x="0" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
 					⭐ ${totalStars.toLocaleString()} stars

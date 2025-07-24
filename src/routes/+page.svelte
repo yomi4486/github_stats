@@ -145,7 +145,7 @@
 
 <style>
 	.container {
-		max-width: 800px;
+		max-width: 1200px;
 		margin: 0 auto;
 		padding: 2rem;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -258,22 +258,35 @@
 		padding: 2rem;
 		border-radius: 1rem;
 		margin-bottom: 3rem;
+		width: 100%;
+		max-width: 1000px;
+		margin-left: auto;
+		margin-right: auto;
+		box-sizing: border-box;
+		overflow: hidden; /* 内容がはみ出すのを防ぐ */
 	}
 
 	.svg-container {
 		display: flex;
+		align-items: center;
 		justify-content: center;
 		margin-bottom: 2rem;
 		background: white;
 		padding: 1.5rem;
 		border-radius: 0.75rem;
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-		overflow-x: auto;
+		overflow: hidden;
+		width: 100%;
+		box-sizing: border-box;
+		min-height: 200px;
 	}
 
 	.svg-container :global(svg) {
 		max-width: 100%;
+		width: auto;
 		height: auto;
+		max-height: 400px;
+		object-fit: contain;
 	}
 
 	.actions {
@@ -368,6 +381,13 @@
 		text-decoration: underline;
 	}
 
+	@media (max-width: 768px) {
+		.svg-container :global(svg) {
+			transform: scale(0.85) !important;
+			transform-origin: center !important;
+		}
+	}
+
 	@media (max-width: 640px) {
 		.container {
 			padding: 1rem;
@@ -389,13 +409,64 @@
 			font-size: 1rem;
 		}
 
+		.result-section {
+			padding: 1rem;
+			margin: 0 -1rem;
+		}
+
 		.svg-container {
 			padding: 0.5rem;
-			overflow-x: auto;
+			min-height: 120px;
+			max-height: 180px;
+			overflow: hidden;
+		}
+
+		.svg-container :global(svg) {
+			max-width: 100% !important;
+			width: auto !important;
+			height: auto !important;
+			transform: scale(0.7) !important;
+			transform-origin: center !important;
 		}
 
 		.example-cards {
 			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.container {
+			padding: 0.75rem;
+		}
+
+		.result-section {
+			padding: 0.75rem;
+			margin: 0 -0.75rem;
+		}
+
+		.svg-container {
+			padding: 0.5rem;
+			min-height: 100px;
+			max-height: 150px;
+			overflow: hidden;
+		}
+
+		.svg-container :global(svg) {
+			transform: scale(0.6) !important;
+			transform-origin: center !important;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.svg-container {
+			min-height: 80px;
+			max-height: 120px;
+			overflow: hidden;
+		}
+
+		.svg-container :global(svg) {
+			transform: scale(0.5) !important;
+			transform-origin: center !important;
 		}
 	}
 </style>
