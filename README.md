@@ -45,109 +45,18 @@ GitHubユーザーの公開統計情報を分析し、**コード行数を重視
 - 💬 使用言語トップ6
 - 📅 GitHub登録年
 
-## 使用方法
-
-### Webインターフェース
-
-1. ブラウザで `http://localhost:5173` にアクセス
-2. GitHubユーザー名を入力
-3. 「統計生成」ボタンをクリック
-4. 生成されたSVGを確認・ダウンロード
-
-### API エンドポイント
-
-#### SVG形式で取得
-```
-GET /api/stats/{username}
-```
-
-#### JSON形式で取得
-```
-GET /api/stats/{username}?format=json
-```
-
 ### 埋め込み例
 
 #### README.mdに埋め込み
 ```markdown
-![GitHub Developer Score](https://your-domain.com/api/stats/octocat)
+![GitHub Developer Score](https://github-stats-eta-two.vercel.app/api/stats/octocat)
 ```
 
 #### HTMLに埋め込み
 ```html
-<img src="https://your-domain.com/api/stats/octocat" alt="GitHub Developer Score">
+<img src="https://github-stats-eta-two.vercel.app/api/stats/octocat" alt="GitHub Developer Score">
 ```
 
-#### 実例
-```markdown
-<!-- あなたのプロフィールに追加 -->
-![My GitHub Stats](https://your-domain.com/api/stats/yourusername)
-```
-
-## 🎨 デザイン仕様
-
-### レイアウト
-- **サイズ**: 800×400px（横長、GitHub README最適化）
-- **レイアウト**: 3列構成
-  - **左列**: アバター + ユーザー情報 + スコア表示
-  - **中列**: スコア内訳 + 詳細統計
-  - **右列**: 使用言語トップ6
-- **カラーテーマ**: ダークモダン
-- **フォント**: Inter（フォールバック: システムフォント）
-
-### 視覚要素
-- **プロフィール画像**: 丸いアバター（GitHubアイコン）
-- **グラデーション背景**: 深みのあるダークテーマ
-- **グロー効果**: スコア数値の強調表示
-- **プログレスバー**: 各評価項目の視覚化
-- **カラーコード**: 言語別の色分け
-
-## 🔬 技術的特徴
-
-### コード行数の推定
-- リポジトリサイズ（KB）から行数を推定
-- 1KB ≈ 18行のコードと仮定
-- フォークされたリポジトリは除外
-
-### スコア正規化
-- 対数スケールを使用して極端な値を調整
-- 各項目0-100点で正規化
-- 重み付けによる総合スコア算出
-
-### パフォーマンス最適化
-- SVGベースで軽量
-- 1時間キャッシュ
-- GitHub API率制限対応
-
-## セットアップ
-
-### 前提条件
-- Node.js (v18以上)
-- pnpm
-
-### インストール
-
-```bash
-# リポジトリをクローン
-git clone https://github.com/yomi4486/github_stats.git
-cd github_stats
-
-# 依存関係をインストール
-pnpm install
-
-# 開発サーバーを起動
-pnpm dev
-```
-
-### 本番環境へのデプロイ
-
-```bash
-# ビルド
-pnpm build
-
-# プレビュー
-pnpm preview
-```
 
 ## 技術スタック
 
@@ -176,8 +85,4 @@ MIT License
 
 ## 貢献
 
-プルリクエストやイシューは歓迎です！
-
-## 作者
-
-yomi4486
+PRやIssueは歓迎です！
