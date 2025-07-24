@@ -194,7 +194,7 @@ function calculateScore(stats: Omit<GitHubStats, 'score' | 'scoreBreakdown'>): {
 	};
 	
 	// 各項目の正規化（対数スケール使用で極端な値を調整）
-	const linesScore = Math.min(100, Math.log10(Math.max(1, stats.totalLines)) * 20);
+	const linesScore = Math.min(100, Math.log10(Math.max(1, stats.totalLines*0.02)) * 20);
 	const starsScore = Math.min(100, Math.log10(Math.max(1, stats.totalStars)) * 25);
 	const followersScore = Math.min(100, Math.log10(Math.max(1, stats.user.followers)) * 30);
 	const commitsScore = Math.min(100, Math.log10(Math.max(1, stats.totalCommits)) * 22);
