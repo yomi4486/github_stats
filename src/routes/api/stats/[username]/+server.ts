@@ -308,11 +308,11 @@ function generateSVG(stats: GitHubStats): string {
 			</defs>
 			
 			<!-- Background -->
-			<rect width="100%" height="100%" fill="url(#bg-gradient)" rx="12"/>
+			<rect width="100%" height="100%" fill="url(#bg-gradient)" rx="6"/>
 			<rect x="2" y="2" width="${width-4}" height="${height-4}" fill="none" stroke="${colors.border}" stroke-width="1" rx="10"/>
 			
 			<!-- Left Section: User Info & Score -->
-			<rect x="20" y="20" width="280" height="360" fill="${colors.cardBg}" rx="8" opacity="0.8"/>
+			<rect x="20" y="20" width="280" height="360" fill="${colors.cardBg}" rx="4" opacity="0.8"/>
 			
 			<!-- User Avatar (GitHub Icon) -->
 			<circle cx="60" cy="60" r="20" fill="${colors.accent}" stroke="${colors.border}" stroke-width="2"/>
@@ -346,16 +346,16 @@ function generateSVG(stats: GitHubStats): string {
 					📊 Quick Stats
 				</text>
 				<text x="0" y="30" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					📝 ${formatNumber(totalLines)} lines
+					📝 ${formatNumber(totalLines)} <tspan font-size="10">lines(est)</tspan>
 				</text>
 				<text x="0" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					⭐ ${totalStars.toLocaleString()} stars
+					⭐ ${totalStars.toLocaleString()} <tspan font-size="10">stars</tspan>
 				</text>
 				<text x="0" y="80" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					👥 ${user.followers.toLocaleString()} followers
+					👥 ${user.followers.toLocaleString()} <tspan font-size="10">followers</tspan>
 				</text>
 				<text x="0" y="105" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					📦 ${user.public_repos} repos
+					📦 ${user.public_repos} <tspan font-size="10">repos</tspan>
 				</text>
 				
 				<!-- Details (右側) -->
@@ -363,13 +363,13 @@ function generateSVG(stats: GitHubStats): string {
 					📈 Details
 				</text>
 				<text x="115" y="30" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					💻 ${totalCommits.toLocaleString()} commits
+					💻 ${totalCommits.toLocaleString()} <tspan font-size="10">commits</tspan>
 				</text>
 				<text x="115" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					🔀 ${totalPRs.toLocaleString()} PRs
+					🔀 ${totalPRs.toLocaleString()} <tspan font-size="10">PRs</tspan>
 				</text>
 				<text x="115" y="80" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					🍴 ${totalForks.toLocaleString()} forks
+					🍴 ${totalForks.toLocaleString()} <tspan font-size="10">forks</tspan>
 				</text>
 				<text x="115" y="105" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
 					📅 Since ${new Date(user.created_at).getFullYear()}
