@@ -1,8 +1,17 @@
 <script lang="ts">
+	import { themes, getThemeNames, type Theme } from '$lib/themes';
+	
 	let username = '';
 	let loading = false;
 	let svgContent = '';
 	let error = '';
+	let selectedTheme = 'dark';
+
+	// 利用可能なテーマを取得
+	const availableThemes = getThemeNames().map(name => ({
+		value: name,
+		label: themes[name].displayName
+	}));
 
 	async function generateStats() {
 		if (!username.trim()) {
@@ -15,7 +24,13 @@
 		svgContent = '';
 
 		try {
-			const response = await fetch(`/api/stats/${encodeURIComponent(username.trim())}`);
+			const params = new URLSearchParams();
+			if (selectedTheme !== 'dark') {
+				params.set('theme', selectedTheme);
+			}
+			
+			const url = `/api/stats/${encodeURIComponent(username.trim())}${params.toString() ? `?${params.toString()}` : ''}`;
+			const response = await fetch(url);
 			
 			if (!response.ok) {
 				throw new Error('ユーザーが見つかりませんでした');
@@ -36,7 +51,7 @@
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `${username}-github-stats.svg`;
+		a.download = `${username}-github-stats-${selectedTheme}.svg`;
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
@@ -46,10 +61,20 @@
 	function copyUrl() {
 		if (!username.trim()) return;
 		
-		const url = `${window.location.origin}/api/stats/${encodeURIComponent(username.trim())}`;
+		const params = new URLSearchParams();
+		if (selectedTheme !== 'dark') {
+			params.set('theme', selectedTheme);
+		}
+		
+		const url = `${window.location.origin}/api/stats/${encodeURIComponent(username.trim())}${params.toString() ? `?${params.toString()}` : ''}`;
 		navigator.clipboard.writeText(url).then(() => {
 			alert('URLをクリップボードにコピーしました！');
 		});
+	}
+
+	// テーマが変更されたときに自動再生成
+	$: if (username && svgContent && selectedTheme) {
+		generateStats();
 	}
 </script>
 
@@ -80,6 +105,11 @@
 				placeholder="GitHubユーザー名を入力 (例: octocat)"
 				on:keydown={(e) => e.key === 'Enter' && generateStats()}
 			/>
+			<select bind:value={selectedTheme} class="theme-select">
+				{#each availableThemes as theme}
+					<option value={theme.value}>{theme.label}</option>
+				{/each}
+			</select>
 			<button on:click={generateStats} disabled={loading}>
 				{loading ? '生成中...' : '統計生成'}
 			</button>
@@ -94,6 +124,11 @@
 
 	{#if svgContent}
 		<div class="result-section">
+			<div class="theme-info">
+				<h3>🎨 選択中のテーマ: {themes[selectedTheme].displayName}</h3>
+				<p>テーマを変更すると自動的に再生成されます</p>
+			</div>
+			
 			<div class="svg-container">
 				{@html svgContent}
 			</div>
@@ -109,22 +144,70 @@
 		</div>
 	{/if}
 
+	<div class="theme-gallery">
+		<h3>🎨 テーマギャラリー</h3>
+		<p>利用可能なテーマを一覧で確認できます</p>
+		<div class="theme-cards">
+			{#each availableThemes as theme}
+				<div class="theme-card" class:active={selectedTheme === theme.value}>
+					<div 
+						class="theme-preview" 
+						style="background: linear-gradient(135deg, {themes[theme.value].gradients.background[0]}, {themes[theme.value].gradients.background[1]}); border-color: {themes[theme.value].colors.border};"
+						on:click={() => selectedTheme = theme.value}
+						role="button"
+						tabindex="0"
+						on:keydown={(e) => e.key === 'Enter' && (selectedTheme = theme.value)}
+					>
+						<div class="preview-header" style="color: {themes[theme.value].colors.text};">
+							{theme.label}
+						</div>
+						<div class="preview-content">
+							<div class="preview-bar" style="background: linear-gradient(90deg, {themes[theme.value].gradients.score[0]}, {themes[theme.value].gradients.score[1]});"></div>
+							<div class="preview-bar" style="background: {themes[theme.value].colors.green}; width: 80%;"></div>
+							<div class="preview-bar" style="background: {themes[theme.value].colors.yellow}; width: 60%;"></div>
+						</div>
+					</div>
+					<button 
+						class="theme-select-btn" 
+						on:click={() => selectedTheme = theme.value}
+						class:active={selectedTheme === theme.value}
+					>
+						{selectedTheme === theme.value ? '✓ 選択中' : '選択'}
+					</button>
+				</div>
+			{/each}
+		</div>
+	</div>
+
 	<div class="examples">
 		<h3>💡 使用例</h3>
 		<div class="example-cards">
 			<div class="card">
 				<h4>GitHub README埋め込み</h4>
 				<div class="code-block">
-					<code>![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/{username})</code>
+					<code>![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme})</code>
 				</div>
 			</div>
 			<div class="card">
 				<h4>HTML埋め込み</h4>
 				<div class="code-block">
-					<code>&lt;img src="https://github-stats-eta-two.vercel.app/api/stats/{username}" alt="Developer Score"&gt;</code>
+					<code>&lt;img src="https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme}" alt="Developer Score"&gt;</code>
 				</div>
 				<p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
 					Webサイトやポートフォリオに
+				</p>
+			</div>
+			<div class="card">
+				<h4>利用可能なテーマ</h4>
+				<ul class="theme-list">
+					{#each availableThemes as theme}
+						<li>
+							<code>theme={theme.value}</code> - {theme.label}
+						</li>
+					{/each}
+				</ul>
+				<p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
+					URLに<code>?theme=テーマ名</code>を追加
 				</p>
 			</div>
 			<div class="card">
@@ -209,15 +292,34 @@
 		display: flex;
 		gap: 1rem;
 		margin-bottom: 1rem;
+		flex-wrap: wrap;
 	}
 
 	input {
-		flex: 1;
+		flex: 2;
+		min-width: 250px;
 		padding: 0.75rem 1rem;
 		border: 2px solid #e5e7eb;
 		border-radius: 0.5rem;
 		font-size: 1rem;
 		transition: border-color 0.2s;
+	}
+
+	.theme-select {
+		flex: 1;
+		min-width: 150px;
+		padding: 0.75rem 1rem;
+		border: 2px solid #e5e7eb;
+		border-radius: 0.5rem;
+		font-size: 1rem;
+		background: white;
+		cursor: pointer;
+		transition: border-color 0.2s;
+	}
+
+	.theme-select:focus {
+		outline: none;
+		border-color: #2563eb;
 	}
 
 	input:focus {
@@ -264,6 +366,27 @@
 		margin-right: auto;
 		box-sizing: border-box;
 		overflow: hidden; /* 内容がはみ出すのを防ぐ */
+	}
+
+	.theme-info {
+		text-align: center;
+		margin-bottom: 1.5rem;
+		padding: 1rem;
+		background: #e0f2fe;
+		border-radius: 0.5rem;
+		border: 1px solid #0891b2;
+	}
+
+	.theme-info h3 {
+		margin: 0 0 0.5rem 0;
+		color: #0369a1;
+		font-size: 1.1rem;
+	}
+
+	.theme-info p {
+		margin: 0;
+		color: #0891b2;
+		font-size: 0.9rem;
 	}
 
 	.svg-container {
@@ -341,6 +464,125 @@
 		color: #374151;
 	}
 
+	.theme-gallery {
+		margin-bottom: 3rem;
+	}
+
+	.theme-gallery h3 {
+		margin-bottom: 1rem;
+		color: #374151;
+	}
+
+	.theme-gallery p {
+		margin-bottom: 1.5rem;
+		color: #6b7280;
+	}
+
+	.theme-cards {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.theme-card {
+		border: 2px solid #e5e7eb;
+		border-radius: 0.5rem;
+		overflow: hidden;
+		transition: all 0.2s;
+		background: white;
+	}
+
+	.theme-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.theme-card.active {
+		border-color: #3b82f6;
+		box-shadow: 0 0 0 1px #3b82f6;
+	}
+
+	.theme-preview {
+		padding: 1rem;
+		border: 1px solid;
+		min-height: 80px;
+		position: relative;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		border-radius: 0.375rem 0.375rem 0 0;
+	}
+
+	.theme-preview:hover {
+		transform: translateY(-1px);
+		box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+	}
+
+	.theme-card.active .theme-preview {
+		box-shadow: inset 0 0 0 2px #3b82f6;
+	}
+
+	.preview-header {
+		font-size: 0.9rem;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+	}
+
+	.preview-content {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.preview-bar {
+		height: 4px;
+		border-radius: 2px;
+		width: 100%;
+	}
+
+	.theme-select-btn {
+		width: 100%;
+		padding: 0.5rem;
+		border: none;
+		background: #f3f4f6;
+		color: #374151;
+		cursor: pointer;
+		transition: background 0.2s;
+		font-size: 0.85rem;
+	}
+
+	.theme-select-btn:hover {
+		background: #e5e7eb;
+	}
+
+	.theme-select-btn.active {
+		background: #3b82f6;
+		color: white;
+	}
+
+	.theme-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.theme-list li {
+		padding: 0.25rem 0;
+		font-size: 0.9rem;
+		color: #4b5563;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.theme-list code {
+		background: #f3f4f6;
+		padding: 0.125rem 0.25rem;
+		border-radius: 0.25rem;
+		font-size: 0.8rem;
+		color: #1f2937;
+	}
+
 	.example-cards {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -397,6 +639,11 @@
 			flex-direction: column;
 		}
 
+		.input, .theme-select {
+			min-width: auto;
+			width: 100%;
+		}
+
 		.actions {
 			flex-direction: column;
 		}
@@ -431,6 +678,10 @@
 
 		.example-cards {
 			grid-template-columns: 1fr;
+		}
+
+		.theme-cards {
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 		}
 	}
 
