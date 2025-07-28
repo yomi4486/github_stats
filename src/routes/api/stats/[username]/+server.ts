@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { GITHUB_TOKEN } from '$env/static/private';
+import { getTheme, type Theme } from '$lib/themes';
 
 interface GitHubUser {
 	login: string;
@@ -245,8 +246,8 @@ function calculateScore(stats: Omit<GitHubStats, 'score' | 'scoreBreakdown'>): {
 	return { score: totalScore, scoreBreakdown };
 }
 
-function generateSVG(stats: GitHubStats, avatarBase64: string | null): string {
-	const { user, totalStars, totalForks, languages, totalCommits, totalLines, totalPRs, score, scoreBreakdown } = stats;
+function generateSVG(stats: GitHubStats, avatarBase64: string, theme: Theme): string {
+	const { user, totalStars, totalForks, totalCommits, totalPRs, totalLines, languages, score, scoreBreakdown } = stats;
 	
 	// 言語を使用頻度順にソート
 	const sortedLanguages = Object.entries(languages)
@@ -256,20 +257,8 @@ function generateSVG(stats: GitHubStats, avatarBase64: string | null): string {
 	const width = 800;
 	const height = 400;
 	
-	// カラーパレット
-	const colors = {
-		background: '#0f172a',
-		cardBg: '#1e293b',
-		border: '#334155',
-		text: '#e2e8f0',
-		textSecondary: '#94a3b8',
-		accent: '#3b82f6',
-		green: '#10b981',
-		yellow: '#f59e0b',
-		purple: '#8b5cf6',
-		red: '#ef4444',
-		orange: '#f97316'
-	};
+	// テーマから色を取得
+	const colors = theme.colors;
 	
 	// スコアレベルに基づく色とランク
 	function getScoreInfo(score: number) {
@@ -315,12 +304,12 @@ function generateSVG(stats: GitHubStats, avatarBase64: string | null): string {
 		<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
 			<defs>
 				<linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-					<stop offset="0%" style="stop-color:${colors.background}"/>
-					<stop offset="100%" style="stop-color:#1e293b"/>
+					<stop offset="0%" style="stop-color:${theme.gradients.background[0]}"/>
+					<stop offset="100%" style="stop-color:${theme.gradients.background[1]}"/>
 				</linearGradient>
 				<linearGradient id="score-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-					<stop offset="0%" style="stop-color:${scoreInfo.color}"/>
-					<stop offset="100%" style="stop-color:${scoreInfo.color}40"/>
+					<stop offset="0%" style="stop-color:${theme.gradients.score[0]}"/>
+					<stop offset="100%" style="stop-color:${theme.gradients.score[1]}"/>
 				</linearGradient>
 				<filter id="glow">
 					<feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -562,8 +551,12 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		// アバター画像を取得
 		const avatarBase64 = await fetchAvatarAsBase64(user.avatar_url);
 		
+		// テーマを取得
+		const themeName = url.searchParams.get('theme');
+		const theme = getTheme(themeName ?? undefined);
+		
 		// SVGを生成
-		const svg = generateSVG(stats, avatarBase64);
+		const svg = generateSVG(stats, avatarBase64!, theme);
 		
 		// クエリパラメータで出力形式を確認
 		const format = url.searchParams.get('format');
