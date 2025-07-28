@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { themes, getThemeNames, type Theme } from '$lib/themes';
+	import { generateSVG } from '$lib/svg-generator';
 	
 	let username = '';
 	let loading = false;
 	let svgContent = '';
 	let error = '';
 	let selectedTheme = 'dark';
+	let cachedData: any = null; // GitHubデータをキャッシュ
 
 	// 利用可能なテーマを取得
 	const availableThemes = getThemeNames().map(name => ({
@@ -13,32 +15,100 @@
 		label: themes[name].displayName
 	}));
 
+	// クライアントサイドでアバターを取得する関数
+	async function fetchAvatarAsBase64(avatarUrl: string): Promise<string | null> {
+		try {
+			const response = await fetch(avatarUrl);
+			if (!response.ok) {
+				console.warn('Failed to fetch avatar image');
+				return null;
+			}
+			
+			const buffer = await response.arrayBuffer();
+			const bytes = new Uint8Array(buffer);
+			let binary = '';
+			for (let i = 0; i < bytes.byteLength; i++) {
+				binary += String.fromCharCode(bytes[i]);
+			}
+			const base64 = btoa(binary);
+			const contentType = response.headers.get('content-type') || 'image/png';
+			
+			return `data:${contentType};base64,${base64}`;
+		} catch (error) {
+			console.error('Error fetching avatar:', error);
+			return null;
+		}
+	}
+
+	// クライアントサイドでGitHub統計を取得する関数
 	async function generateStats() {
 		if (!username.trim()) {
 			error = 'GitHubユーザー名を入力してください';
 			return;
 		}
 
+		console.log('Generating stats for:', username, 'with theme:', selectedTheme);
 		loading = true;
 		error = '';
-		svgContent = '';
 
 		try {
-			const params = new URLSearchParams();
-			if (selectedTheme !== 'dark') {
-				params.set('theme', selectedTheme);
-			}
-			
-			const url = `/api/stats/${encodeURIComponent(username.trim())}${params.toString() ? `?${params.toString()}` : ''}`;
-			const response = await fetch(url);
-			
-			if (!response.ok) {
-				throw new Error('ユーザーが見つかりませんでした');
+			// キャッシュされたデータがない場合のみAPIリクエストを送信
+			if (!cachedData || cachedData.username !== username.trim()) {
+				console.log('Fetching new data from API...');
+				const params = new URLSearchParams();
+				params.set('format', 'json'); // JSONフォーマットでデータを取得
+				
+				const url = `/api/stats/${encodeURIComponent(username.trim())}?${params.toString()}`;
+				console.log('Fetching URL:', url);
+				
+				const response = await fetch(url);
+				console.log('Response status:', response.status);
+				
+				if (!response.ok) {
+					throw new Error('ユーザーが見つかりませんでした');
+				}
+
+				cachedData = await response.json();
+				cachedData.username = username.trim(); // ユーザー名をキャッシュに保存
+				
+				// サーバー側でアバターが取得できなかった場合、クライアントサイドで再試行
+				if (!cachedData.avatarBase64 && cachedData.user?.avatar_url) {
+					console.log('Fetching avatar on client side...');
+					cachedData.avatarBase64 = await fetchAvatarAsBase64(cachedData.user.avatar_url);
+				}
+				
+				console.log('Data cached for user:', cachedData.username);
+			} else {
+				console.log('Using cached data for user:', cachedData.username);
 			}
 
-			svgContent = await response.text();
+			// キャッシュされたデータから選択されたテーマでSVGを生成
+			const theme = themes[selectedTheme];
+			const stats = {
+				user: cachedData.user,
+				totalStars: cachedData.totalStars || 0,
+				totalForks: cachedData.totalForks || 0,
+				languages: cachedData.languages || {},
+				totalCommits: cachedData.totalCommits || cachedData.commits || 0,
+				totalLines: cachedData.totalLines || 0,
+				totalPRs: cachedData.totalPRs || cachedData.pullRequests || 0,
+				score: cachedData.score || 0,
+				scoreBreakdown: cachedData.scoreBreakdown || {
+					linesScore: 0,
+					starsScore: 0,
+					followersScore: 0,
+					commitsScore: 0,
+					reposScore: 0,
+					totalScore: 0
+				},
+				avatarBase64: cachedData.avatarBase64 || null
+			};
+			svgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+			console.log('SVG generated with theme:', selectedTheme);
 		} catch (err) {
+			console.error('Error generating stats:', err);
 			error = err instanceof Error ? err.message : 'エラーが発生しました';
+			cachedData = null; // エラー時はキャッシュをクリア
 		} finally {
 			loading = false;
 		}
@@ -72,9 +142,44 @@
 		});
 	}
 
-	// テーマが変更されたときに自動再生成
-	$: if (username && svgContent && selectedTheme) {
-		generateStats();
+	// 前回のテーマを記録して無限ループを防ぐ
+	let previousTheme = selectedTheme;
+	
+	// テーマが変更されたときに自動再生成（キャッシュされたデータがある場合）
+	$: if (cachedData && selectedTheme !== previousTheme) {
+		console.log('Theme changed from', previousTheme, 'to', selectedTheme);
+		previousTheme = selectedTheme;
+		
+		// キャッシュされたデータから新しいテーマでSVGを生成
+		const theme = themes[selectedTheme];
+		const stats = {
+			user: cachedData.user,
+			totalStars: cachedData.totalStars || 0,
+			totalForks: cachedData.totalForks || 0,
+			languages: cachedData.languages || {},
+			totalCommits: cachedData.totalCommits || cachedData.commits || 0,
+			totalLines: cachedData.totalLines || 0,
+			totalPRs: cachedData.totalPRs || cachedData.pullRequests || 0,
+			score: cachedData.score || 0,
+			scoreBreakdown: cachedData.scoreBreakdown || {
+				linesScore: 0,
+				starsScore: 0,
+				followersScore: 0,
+				commitsScore: 0,
+				reposScore: 0,
+				totalScore: 0
+			},
+			avatarBase64: cachedData.avatarBase64 || null
+		};
+		svgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+		console.log('SVG regenerated with new theme:', selectedTheme);
+	}
+
+	// ユーザー名が変更されたときはキャッシュをクリア
+	$: if (username && cachedData && cachedData.username !== username.trim()) {
+		console.log('Username changed, clearing cache');
+		cachedData = null;
+		svgContent = '';
 	}
 </script>
 
@@ -435,16 +540,6 @@
 		background: #6d28d9;
 	}
 
-	.api-info {
-		border-top: 1px solid #e5e7eb;
-		padding-top: 2rem;
-	}
-
-	.api-info h3 {
-		margin-bottom: 1rem;
-		color: #374151;
-	}
-
 	.code-block {
 		background: #1f2937;
 		color: #f9fafb;
@@ -614,15 +709,6 @@
 		color: #4b5563;
 	}
 
-	a {
-		color: #2563eb;
-		text-decoration: none;
-	}
-
-	a:hover {
-		text-decoration: underline;
-	}
-
 	@media (max-width: 768px) {
 		.svg-container :global(svg) {
 			transform: scale(0.85) !important;
@@ -639,7 +725,7 @@
 			flex-direction: column;
 		}
 
-		.input, .theme-select {
+		input, .theme-select {
 			min-width: auto;
 			width: 100%;
 		}
