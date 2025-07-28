@@ -1,4 +1,4 @@
-![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/yomi4486?r=1)
+![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/yomi4486?r=2)
 
 GitHubユーザーの公開統計情報を分析し、**コード行数を重視**した独自のスコアリングで開発者スキルを評価・可視化するリドミデコ
 
