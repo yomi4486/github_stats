@@ -150,12 +150,19 @@
 		<div class="theme-cards">
 			{#each availableThemes as theme}
 				<div class="theme-card" class:active={selectedTheme === theme.value}>
-					<div class="theme-preview" style="background: {themes[theme.value].colors.background}; border-color: {themes[theme.value].colors.border};">
+					<div 
+						class="theme-preview" 
+						style="background: linear-gradient(135deg, {themes[theme.value].gradients.background[0]}, {themes[theme.value].gradients.background[1]}); border-color: {themes[theme.value].colors.border};"
+						on:click={() => selectedTheme = theme.value}
+						role="button"
+						tabindex="0"
+						on:keydown={(e) => e.key === 'Enter' && (selectedTheme = theme.value)}
+					>
 						<div class="preview-header" style="color: {themes[theme.value].colors.text};">
 							{theme.label}
 						</div>
 						<div class="preview-content">
-							<div class="preview-bar" style="background: {themes[theme.value].colors.accent};"></div>
+							<div class="preview-bar" style="background: linear-gradient(90deg, {themes[theme.value].gradients.score[0]}, {themes[theme.value].gradients.score[1]});"></div>
 							<div class="preview-bar" style="background: {themes[theme.value].colors.green}; width: 80%;"></div>
 							<div class="preview-bar" style="background: {themes[theme.value].colors.yellow}; width: 60%;"></div>
 						</div>
@@ -487,7 +494,6 @@
 	}
 
 	.theme-card:hover {
-		border-color: #3b82f6;
 		transform: translateY(-2px);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
@@ -502,6 +508,18 @@
 		border: 1px solid;
 		min-height: 80px;
 		position: relative;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		border-radius: 0.375rem 0.375rem 0 0;
+	}
+
+	.theme-preview:hover {
+		transform: translateY(-1px);
+		box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+	}
+
+	.theme-card.active .theme-preview {
+		box-shadow: inset 0 0 0 2px #3b82f6;
 	}
 
 	.preview-header {
