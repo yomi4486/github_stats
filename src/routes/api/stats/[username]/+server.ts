@@ -183,6 +183,30 @@ async function estimateCodeLines(repos: GitHubRepo[]): Promise<number> {
 	return Math.round(totalLines);
 }
 
+async function fetchAvatarAsBase64(avatarUrl: string): Promise<string | null> {
+	try {
+		const response = await fetch(avatarUrl);
+		if (!response.ok) {
+			console.warn('Failed to fetch avatar image');
+			return null;
+		}
+		
+		const buffer = await response.arrayBuffer();
+		const bytes = new Uint8Array(buffer);
+		let binary = '';
+		for (let i = 0; i < bytes.byteLength; i++) {
+			binary += String.fromCharCode(bytes[i]);
+		}
+		const base64 = btoa(binary);
+		const contentType = response.headers.get('content-type') || 'image/png';
+		
+		return `data:${contentType};base64,${base64}`;
+	} catch (error) {
+		console.error('Error fetching avatar:', error);
+		return null;
+	}
+}
+
 function calculateScore(stats: Omit<GitHubStats, 'score' | 'scoreBreakdown'>): { score: number; scoreBreakdown: ScoreBreakdown } {
 	// スコア計算の重み付け（行数を最重視）
 	const weights = {
@@ -221,7 +245,7 @@ function calculateScore(stats: Omit<GitHubStats, 'score' | 'scoreBreakdown'>): {
 	return { score: totalScore, scoreBreakdown };
 }
 
-function generateSVG(stats: GitHubStats): string {
+function generateSVG(stats: GitHubStats, avatarBase64: string | null): string {
 	const { user, totalStars, totalForks, languages, totalCommits, totalLines, totalPRs, score, scoreBreakdown } = stats;
 	
 	// 言語を使用頻度順にソート
@@ -315,10 +339,18 @@ function generateSVG(stats: GitHubStats): string {
 			<rect x="20" y="20" width="280" height="360" fill="${colors.cardBg}" rx="4" opacity="0.8"/>
 			
 			<!-- User Avatar (GitHub Icon) -->
-			<circle cx="60" cy="60" r="20" fill="${colors.accent}" stroke="${colors.border}" stroke-width="2"/>
-			<text x="60" y="68" fill="${colors.background}" font-family="Inter, -apple-system, sans-serif" font-size="24" font-weight="700" text-anchor="middle">
-				${(user.name || user.login).charAt(0).toUpperCase()}
-			</text>
+			<clipPath id="avatarClip">
+				<circle cx="60" cy="60" r="20"/>
+			</clipPath>
+			${avatarBase64 ? `
+				<image x="40" y="40" width="40" height="40" href="${avatarBase64}" clip-path="url(#avatarClip)"/>
+				<circle cx="60" cy="60" r="20" fill="none" stroke="${colors.border}" stroke-width="2"/>
+			` : `
+				<circle cx="60" cy="60" r="20" fill="${colors.accent}" stroke="${colors.border}" stroke-width="2"/>
+				<text x="60" y="68" fill="${colors.background}" font-family="Inter, -apple-system, sans-serif" font-size="24" font-weight="700" text-anchor="middle">
+					${(user.name || user.login).charAt(0).toUpperCase()}
+				</text>
+			`}
 			
 			<!-- User Info -->
 			<text x="90" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="20" font-weight="700" text-anchor="start">
@@ -527,8 +559,11 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			scoreBreakdown
 		};
 		
+		// アバター画像を取得
+		const avatarBase64 = await fetchAvatarAsBase64(user.avatar_url);
+		
 		// SVGを生成
-		const svg = generateSVG(stats);
+		const svg = generateSVG(stats, avatarBase64);
 		
 		// クエリパラメータで出力形式を確認
 		const format = url.searchParams.get('format');
