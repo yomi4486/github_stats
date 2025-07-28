@@ -206,6 +206,75 @@ export const themes: Record<string, Theme> = {
       score: ['#58a6ff', '#7c3aed'],
       background: ['#0d1117', '#161b22']
     }
+  },
+  cosmic: {
+    name: 'cosmic',
+    displayName: 'コズミック',
+    colors: {
+      background: '#1a0033',
+      cardBg: '#2d1b69',
+      border: '#4c1d95',
+      text: '#ffffff',
+      textSecondary: '#c084fc',
+      accent: '#8b5cf6',
+      green: '#10b981',
+      yellow: '#fbbf24',
+      purple: '#c084fc',
+      red: '#f472b6',
+      orange: '#fb923c',
+      primary: '#8b5cf6',
+      secondary: '#f472b6'
+    },
+    gradients: {
+      score: ['#8b5cf6', '#f472b6'],
+      background: ['#4c1d95', '#fb7185']
+    }
+  },
+  neon: {
+    name: 'neon',
+    displayName: 'ネオン',
+    colors: {
+      background: '#0a0a0a',
+      cardBg: '#1a1a2e',
+      border: '#16213e',
+      text: '#ffffff',
+      textSecondary: '#a8c8ec',
+      accent: '#00d4ff',
+      green: '#39ff14',
+      yellow: '#ffff00',
+      purple: '#ff00ff',
+      red: '#ff073a',
+      orange: '#ff6600',
+      primary: '#00d4ff',
+      secondary: '#ff00ff'
+    },
+    gradients: {
+      score: ['#667eea', '#764ba2'],
+      background: ['#667eea', '#f093fb']
+    }
+  },
+  gradient: {
+    name: 'gradient',
+    displayName: 'グラデーション',
+    colors: {
+      background: '#4c1d95',
+      cardBg: 'rgba(255, 255, 255, 0.1)',
+      border: 'rgba(255, 255, 255, 0.2)',
+      text: '#ffffff',
+      textSecondary: 'rgba(255, 255, 255, 0.8)',
+      accent: '#fbbf24',
+      green: '#10b981',
+      yellow: '#fbbf24',
+      purple: '#c084fc',
+      red: '#f472b6',
+      orange: '#fb923c',
+      primary: '#8b5cf6',
+      secondary: '#f472b6'
+    },
+    gradients: {
+      score: ['#fbbf24', '#f472b6'],
+      background: ['#667eea', '#764ba2']
+    }
   }
 };
 

@@ -325,7 +325,7 @@ function generateSVG(stats: GitHubStats, avatarBase64: string, theme: Theme): st
 			<rect x="2" y="2" width="${width-4}" height="${height-4}" fill="none" stroke="${colors.border}" stroke-width="1" rx="10"/>
 			
 			<!-- Left Section: User Info & Score -->
-			<rect x="20" y="20" width="280" height="360" fill="${colors.cardBg}" rx="4" opacity="0.8"/>
+			<rect x="20" y="20" width="280" height="360" fill="${colors.cardBg}" rx="4" opacity="0.5"/>
 			
 			<!-- User Avatar (GitHub Icon) -->
 			<clipPath id="avatarClip">
@@ -398,7 +398,7 @@ function generateSVG(stats: GitHubStats, avatarBase64: string, theme: Theme): st
 			</g>
 			
 			<!-- Middle Section: Score Breakdown -->
-			<rect x="320" y="20" width="220" height="360" fill="${colors.cardBg}" rx="8" opacity="0.8"/>
+			<rect x="320" y="20" width="220" height="360" fill="${colors.cardBg}" rx="8" opacity="0.5"/>
 			
 			<text x="340" y="50" fill="${colors.accent}" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="600">
 				🎯 Score Breakdown
@@ -458,7 +458,7 @@ function generateSVG(stats: GitHubStats, avatarBase64: string, theme: Theme): st
 			</g>
 			
 			<!-- Right Section: Languages -->
-			<rect x="560" y="20" width="220" height="360" fill="${colors.cardBg}" rx="8" opacity="0.8"/>
+			<rect x="560" y="20" width="220" height="360" fill="${colors.cardBg}" rx="8" opacity="0.5"/>
 			
 			<text x="580" y="50" fill="${colors.accent}" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="600">
 				💬 Top Languages
