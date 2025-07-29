@@ -915,8 +915,8 @@
         padding: 1.5rem;
         border-radius: 0.5rem;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px
-	}
+        border: 1px solid #e5e7eb;
+    }
 
     .container.dark .card {
         background: #1e293b;
