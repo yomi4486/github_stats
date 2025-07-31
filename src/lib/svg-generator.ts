@@ -46,11 +46,13 @@ function getScoreInfo(score: number) {
 
 // 数値をフォーマットする関数
 function formatNumber(num: number): string {
-	if (num >= 1000000) {
-		return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-	} else if (num >= 1000) {
-		return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-	}
+ 	if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'G';
+    } else if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
 	return num.toString();
 }
 
@@ -160,13 +162,13 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 					📝 ${formatNumber(totalLines)} <tspan font-size="10">lines(est)</tspan>
 				</text>
 				<text x="0" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					⭐ ${totalStars.toLocaleString()} <tspan font-size="10">stars</tspan>
+					⭐ ${formatNumber(totalStars)} <tspan font-size="10">stars</tspan>
 				</text>
 				<text x="0" y="80" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					👥 ${user.followers.toLocaleString()} <tspan font-size="10">followers</tspan>
+					👥 ${formatNumber(user.followers)} <tspan font-size="10">followers</tspan>
 				</text>
 				<text x="0" y="105" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					📦 ${user.public_repos} <tspan font-size="10">repos</tspan>
+					📦 ${formatNumber(user.public_repos)} <tspan font-size="10">repos</tspan>
 				</text>
 				
 				<!-- Details (右側) -->
@@ -174,13 +176,13 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 					📈 Details
 				</text>
 				<text x="115" y="30" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					💻 ${totalCommits.toLocaleString()} <tspan font-size="10">commits</tspan>
+					💻 ${formatNumber(totalCommits)} <tspan font-size="10">commits</tspan>
 				</text>
 				<text x="115" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					🔀 ${totalPRs.toLocaleString()} <tspan font-size="10">PRs</tspan>
+					🔀 ${formatNumber(totalPRs)} <tspan font-size="10">PRs</tspan>
 				</text>
 				<text x="115" y="80" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
-					🍴 ${totalForks.toLocaleString()} <tspan font-size="10">forks</tspan>
+					🍴 ${formatNumber(totalForks)} <tspan font-size="10">forks</tspan>
 				</text>
 				<text x="115" y="105" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
 					📅 Since ${new Date(user.created_at).getFullYear()}
