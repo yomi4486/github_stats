@@ -2,6 +2,10 @@
 
 GitHubユーザーの公開統計情報を分析し、**コード行数を重視**した独自のスコアリングで開発者スキルを評価・可視化するリドミデコ
 
+## テーマ(要望があれば増やします🎉)
+<img width="100%" alt="Screenshot 2025-07-31 at 19 13 54" src="https://github.com/user-attachments/assets/036a8111-575e-427f-b8ca-9dd7aab518b0" />
+
+
 ## ✨ 特徴
 
 - 📊 GitHubユーザーの統計情報を総合分析
