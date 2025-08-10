@@ -897,6 +897,8 @@
         border-radius: 0.25rem;
         font-size: 0.8rem;
         color: #1f2937;
+        display: inline-block;
+        min-width: 100px;
     }
 
     .container.dark .theme-list code {
