@@ -146,10 +146,10 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 			<text x="160" y="140" text-anchor="middle" fill="${scoreInfo.color}" font-family="Inter, -apple-system, sans-serif" font-size="36" font-weight="800" filter="url(#glow)">
 				${scoreInfo.emoji} ${score} / 100
 			</text>
-			<text x="160" y="165" text-anchor="middle" fill="${scoreInfo.color}" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="600">
+			<text x="60" y="165" fill="${scoreInfo.color}" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="600">
 				${scoreInfo.rank}
 			</text>
-			<text x="160" y="185" text-anchor="middle" fill="${colors.textSecondary}" font-family="Inter, -apple-system, sans-serif" font-size="13">
+			<text x="60" y="185" fill="${colors.textSecondary}" font-family="Inter, -apple-system, sans-serif" font-size="13">
 				Developer Score
 			</text>
 			
