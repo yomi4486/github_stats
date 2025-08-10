@@ -154,7 +154,7 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 			</text>
 			
 			<!-- Quick Stats -->
-			<g transform="translate(45, 230)">
+			<g transform="translate(35, 230)">
 				<text x="0" y="0" fill="${colors.accent}" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="600">
 					📊 Quick Stats
 				</text>
@@ -172,19 +172,19 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 				</text>
 				
 				<!-- Details (右側) -->
-				<text x="115" y="0" fill="${colors.accent}" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="600">
+				<text x="140" y="0" fill="${colors.accent}" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="600">
 					📈 Details
 				</text>
-				<text x="115" y="30" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
+				<text x="140" y="30" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
 					💻 ${formatNumber(totalCommits)} <tspan font-size="10">commits</tspan>
 				</text>
-				<text x="115" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
+				<text x="140" y="55" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
 					🔀 ${formatNumber(totalPRs)} <tspan font-size="10">PRs</tspan>
 				</text>
-				<text x="115" y="80" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
+				<text x="140" y="80" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
 					🍴 ${formatNumber(totalForks)} <tspan font-size="10">forks</tspan>
 				</text>
-				<text x="115" y="105" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
+				<text x="140" y="105" fill="${colors.text}" font-family="Inter, -apple-system, sans-serif" font-size="14">
 					📅 Since ${new Date(user.created_at).getFullYear()}
 				</text>
 			</g>
