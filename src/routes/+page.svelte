@@ -527,6 +527,10 @@
         transition: border-color 0.2s;
         background: white;
         color: #1f2937;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
     }
 
     .container.dark input {
@@ -546,12 +550,22 @@
         cursor: pointer;
         transition: border-color 0.2s;
         color: #1f2937;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 1.2em;
+        padding-right: 2.5rem;
     }
 
     .container.dark .theme-select {
-        background: #1e293b;
+        background-color: #1e293b;
         border-color: #475569;
         color: #f1f5f9;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f1f5f9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     }
 
     .theme-select:focus, input:focus {
@@ -974,11 +988,22 @@
 
         .input-group {
             flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+
+        .input-group input,
+        .input-group .theme-select,
+        .input-group button {
+            width: 100%;
+            min-width: auto;
+            flex: none;
         }
 
         input, .theme-select {
             min-width: auto;
             width: 100%;
+            font-size: 16px; /* iOSのズーム防止 */
         }
 
         .actions {
@@ -1029,6 +1054,28 @@
         .header-top h1 {
             font-size: 1.8rem;
         }
+
+        .theme-list {
+            padding-left: 1rem;
+        }
+
+        .theme-list code {
+            min-width: 80px;
+            font-size: 0.75rem;
+        }
+
+        .section h3 {
+            font-size: 1.25rem;
+        }
+
+        .button-group {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .button-group button {
+            width: 100%;
+        }
     }
 
     @media (max-width: 480px) {
@@ -1045,12 +1092,30 @@
             padding: 0.5rem;
             min-height: 100px;
             max-height: 150px;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
 
         .svg-container :global(svg) {
-            transform: scale(0.6) !important;
-            transform-origin: center !important;
+            transform: scale(0.5) !important;
+            transform-origin: top left !important;
+            margin: 0 auto;
+        }
+
+        .theme-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .theme-card-inner {
+            padding: 0.5rem;
+        }
+
+        .example-card h4 {
+            font-size: 0.9rem;
+        }
+
+        .score-info ul {
+            padding-left: 1rem;
         }
     }
 
