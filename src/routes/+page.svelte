@@ -1,13 +1,22 @@
 <script lang="ts">
     import { themes, getThemeNames, type Theme } from '$lib/themes';
-    import { generateSVG, generateResponsiveSVG } from '$lib/svg-generator';
+    import { generateSVG } from '$lib/svg-generator';
     import { onMount } from 'svelte';
+    
+    /**
+     * SVGをレスポンシブ対応に変換する関数
+     */
+    function makeResponsive(svg: string): string {
+        return svg.replace(
+            /width="([0-9]+)" height="([0-9]+)"/,
+            'width="100%" height="100%" viewBox="0 0 $1 $2" preserveAspectRatio="xMidYMid meet"'
+        );
+    }
     
     let username = '';
     let loading = false;
-    let svgContent = '';
+    let svgContent = ''; // 表示用のレスポンシブSVG
     let originalSvgContent = ''; // ダウンロード・コピー用の元のSVG
-    let displaySvgContent = ''; // 表示用のレスポンシブSVG
     let error = '';
     let selectedTheme = 'dark';
     let cachedData: any = null; // GitHubデータをキャッシュ
@@ -34,18 +43,8 @@
         };
         mediaQuery.addEventListener('change', handleSystemThemeChange);
         
-        // 画面サイズ変更時にSVGを切り替え
-        const handleResize = () => {
-            if (originalSvgContent && displaySvgContent) {
-                const isMobile = window.innerWidth <= 768;
-                svgContent = isMobile ? displaySvgContent : originalSvgContent;
-            }
-        };
-        window.addEventListener('resize', handleResize);
-        
         return () => {
             mediaQuery.removeEventListener('change', handleSystemThemeChange);
-            window.removeEventListener('resize', handleResize);
         };
     });
 
@@ -156,13 +155,9 @@
                 },
                 avatarBase64: cachedData.avatarBase64 || null
             };
-            // 両方のSVGを生成
+            // SVGを生成
             originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
-            displaySvgContent = generateResponsiveSVG(stats, cachedData.avatarBase64 || null, theme);
-            
-            // モバイル判定
-            const isMobile = window.innerWidth <= 768;
-            svgContent = isMobile ? displaySvgContent : originalSvgContent;
+            svgContent = makeResponsive(originalSvgContent); // 表示は常にレスポンシブ版
             
             console.log('SVG generated with theme:', selectedTheme);
         } catch (err) {
@@ -231,13 +226,9 @@
             },
             avatarBase64: cachedData.avatarBase64 || null
         };
-        // 両方のSVGを生成
+        // SVGを生成
         originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
-        displaySvgContent = generateResponsiveSVG(stats, cachedData.avatarBase64 || null, theme);
-        
-        // モバイル判定
-        const isMobile = window.innerWidth <= 768;
-        svgContent = isMobile ? displaySvgContent : originalSvgContent;
+        svgContent = makeResponsive(originalSvgContent); // 表示は常にレスポンシブ版
         
         console.log('SVG regenerated with new theme:', selectedTheme);
     }
