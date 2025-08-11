@@ -278,7 +278,7 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 			}).join('')}
 			
 			<!-- Footer -->
-			<text x="20" y="${height - 15}" fill="${colors.textSecondary}" font-family="Inter, -apple-system, sans-serif" font-size="11" opacity="0.7">
+			<text x="20" y="${height - 8}" fill="${colors.textSecondary}" font-family="Inter, -apple-system, sans-serif" font-size="11" opacity="0.7">
 				Powered by yomi4486 • ${new Date().toISOString().split('T')[0]}
 			</text>
 		</svg>

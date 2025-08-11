@@ -117,7 +117,15 @@
                 console.log('Response status:', response.status);
                 
                 if (!response.ok) {
-                    throw new Error('ユーザーが見つかりませんでした');
+                    if (response.status === 404) {
+                        throw new Error('ユーザーが見つかりませんでした');
+                    } else if (response.status === 429) {
+                        throw new Error('GitHub APIのレート制限に達しました。しばらく待ってから再試行してください。');
+                    } else if (response.status === 503) {
+                        throw new Error('GitHub APIが一時的に利用できません。後でもう一度お試しください。');
+                    } else {
+                        throw new Error('データの取得に失敗しました');
+                    }
                 }
 
                 cachedData = await response.json();

@@ -299,9 +299,9 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		
 		// エラーの種類に応じて適切なレスポンスを返す
 		if (err instanceof Error) {
-			if (err.message.includes('User not found')) {
+			if (err.message.includes('not found')) {
 				throw error(404, `GitHub user '${params.username}' not found`);
-			} else if (err.message.includes('Rate limit exceeded')) {
+			} else if (err.message.includes('rate limit exceeded')) {
 				throw error(429, 'GitHub API rate limit exceeded. Please try again later.');
 			} else if (err.message.includes('API request failed')) {
 				throw error(503, 'GitHub API is currently unavailable. Please try again later.');
