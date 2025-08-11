@@ -1,11 +1,13 @@
 <script lang="ts">
     import { themes, getThemeNames, type Theme } from '$lib/themes';
-    import { generateSVG } from '$lib/svg-generator';
+    import { generateSVG, generateResponsiveSVG } from '$lib/svg-generator';
     import { onMount } from 'svelte';
     
     let username = '';
     let loading = false;
     let svgContent = '';
+    let originalSvgContent = ''; // ダウンロード・コピー用の元のSVG
+    let displaySvgContent = ''; // 表示用のレスポンシブSVG
     let error = '';
     let selectedTheme = 'dark';
     let cachedData: any = null; // GitHubデータをキャッシュ
@@ -32,8 +34,18 @@
         };
         mediaQuery.addEventListener('change', handleSystemThemeChange);
         
+        // 画面サイズ変更時にSVGを切り替え
+        const handleResize = () => {
+            if (originalSvgContent && displaySvgContent) {
+                const isMobile = window.innerWidth <= 768;
+                svgContent = isMobile ? displaySvgContent : originalSvgContent;
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        
         return () => {
             mediaQuery.removeEventListener('change', handleSystemThemeChange);
+            window.removeEventListener('resize', handleResize);
         };
     });
 
@@ -144,7 +156,14 @@
                 },
                 avatarBase64: cachedData.avatarBase64 || null
             };
-            svgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+            // 両方のSVGを生成
+            originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+            displaySvgContent = generateResponsiveSVG(stats, cachedData.avatarBase64 || null, theme);
+            
+            // モバイル判定
+            const isMobile = window.innerWidth <= 768;
+            svgContent = isMobile ? displaySvgContent : originalSvgContent;
+            
             console.log('SVG generated with theme:', selectedTheme);
         } catch (err) {
             console.error('Error generating stats:', err);
@@ -156,9 +175,9 @@
     }
 
     function downloadSVG() {
-        if (!svgContent) return;
+        if (!originalSvgContent) return;
 
-        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+        const blob = new Blob([originalSvgContent], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -212,7 +231,14 @@
             },
             avatarBase64: cachedData.avatarBase64 || null
         };
-        svgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+        // 両方のSVGを生成
+        originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+        displaySvgContent = generateResponsiveSVG(stats, cachedData.avatarBase64 || null, theme);
+        
+        // モバイル判定
+        const isMobile = window.innerWidth <= 768;
+        svgContent = isMobile ? displaySvgContent : originalSvgContent;
+        
         console.log('SVG regenerated with new theme:', selectedTheme);
     }
 
@@ -1071,8 +1097,9 @@
 
 	@media (max-width: 768px) {
         .svg-container :global(svg) {
-            transform: scale(0.85) !important;
-            transform-origin: center !important;
+            /* レスポンシブSVGを使用するのでtransformは不要 */
+            max-width: 100%;
+            height: auto;
         }
 
         .header-top {
@@ -1129,17 +1156,14 @@
 
         .svg-container {
             padding: 0.5rem;
-            min-height: 120px;
-            max-height: 180px;
+            min-height: 200px;
             overflow: hidden;
         }
 
         .svg-container :global(svg) {
             max-width: 100% !important;
-            width: auto !important;
+            width: 100% !important;
             height: auto !important;
-            transform: scale(0.7) !important;
-            transform-origin: center !important;
         }
 
         .example-cards {
@@ -1215,16 +1239,14 @@
 
         .svg-container {
             padding: 0.5rem;
-            min-height: 100px;
-            max-height: 150px;
-            overflow-x: auto;
-            overflow-y: hidden;
+            min-height: 180px;
+            overflow: visible;
         }
 
         .svg-container :global(svg) {
-            transform: scale(0.5) !important;
-            transform-origin: top left !important;
-            margin: 0 auto;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: auto !important;
         }
 
         .theme-cards {
@@ -1246,14 +1268,14 @@
 
     @media (max-width: 360px) {
         .svg-container {
-            min-height: 80px;
-            max-height: 120px;
-            overflow: hidden;
+            min-height: 150px;
+            overflow: visible;
         }
 
         .svg-container :global(svg) {
-            transform: scale(0.5) !important;
-            transform-origin: center !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: auto !important;
         }
     }
 </style>
