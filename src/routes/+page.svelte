@@ -2,14 +2,26 @@
     import { themes, getThemeNames, type Theme } from '$lib/themes';
     import { generateSVG } from '$lib/svg-generator';
     import { onMount } from 'svelte';
-    
+
+    /**
+     * SVGをレスポンシブ対応に変換する関数
+     */
+    function makeResponsive(svg: string): string {
+        return svg.replace(
+            /width="([0-9]+)" height="([0-9]+)"/,
+            'width="100%" height="100%" viewBox="0 0 $1 $2" preserveAspectRatio="xMidYMid meet"'
+        );
+    }
+
     let username = '';
     let loading = false;
-    let svgContent = '';
+    let svgContent = ''; // 表示用のレスポンシブSVG
+    let originalSvgContent = ''; // ダウンロード・コピー用の元のSVG
     let error = '';
     let selectedTheme = 'dark';
     let cachedData: any = null; // GitHubデータをキャッシュ
     let darkMode = false; // ページのダークモード状態
+    let copyMessage = ''; // コピー成功メッセージ
 
     // ダークモードの初期化とローカルストレージからの読み込み
     onMount(() => {
@@ -21,7 +33,7 @@
             // システムの設定を確認
             darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         }
-        
+
         // システムの設定変更を監視
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleSystemThemeChange = (e: MediaQueryListEvent) => {
@@ -30,7 +42,7 @@
             }
         };
         mediaQuery.addEventListener('change', handleSystemThemeChange);
-        
+
         return () => {
             mediaQuery.removeEventListener('change', handleSystemThemeChange);
         };
@@ -56,7 +68,7 @@
                 console.warn('Failed to fetch avatar image');
                 return null;
             }
-            
+
             const buffer = await response.arrayBuffer();
             const bytes = new Uint8Array(buffer);
             let binary = '';
@@ -65,12 +77,19 @@
             }
             const base64 = btoa(binary);
             const contentType = response.headers.get('content-type') || 'image/png';
-            
+
             return `data:${contentType};base64,${base64}`;
         } catch (error) {
             console.error('Error fetching avatar:', error);
             return null;
         }
+    }
+
+    function copyToClipboard(text: string, type: string) {
+        navigator.clipboard.writeText(text).then(() => {
+            copyMessage = type;
+            setTimeout(() => copyMessage = '', 2000);
+        });
     }
 
     // クライアントサイドでGitHub統計を取得する関数
@@ -90,26 +109,34 @@
                 console.log('Fetching new data from API...');
                 const params = new URLSearchParams();
                 params.set('format', 'json'); // JSONフォーマットでデータを取得
-                
+
                 const url = `/api/stats/${encodeURIComponent(username.trim())}?${params.toString()}`;
                 console.log('Fetching URL:', url);
-                
+
                 const response = await fetch(url);
                 console.log('Response status:', response.status);
-                
+
                 if (!response.ok) {
-                    throw new Error('ユーザーが見つかりませんでした');
+                    if (response.status === 404) {
+                        throw new Error('ユーザーが見つかりませんでした');
+                    } else if (response.status === 429) {
+                        throw new Error('GitHub APIのレート制限に達しました。しばらく待ってから再試行してください。');
+                    } else if (response.status === 503) {
+                        throw new Error('GitHub APIが一時的に利用できません。後でもう一度お試しください。');
+                    } else {
+                        throw new Error('データの取得に失敗しました');
+                    }
                 }
 
                 cachedData = await response.json();
                 cachedData.username = username.trim(); // ユーザー名をキャッシュに保存
-                
+
                 // サーバー側でアバターが取得できなかった場合、クライアントサイドで再試行
                 if (!cachedData.avatarBase64 && cachedData.user?.avatar_url) {
                     console.log('Fetching avatar on client side...');
                     cachedData.avatarBase64 = await fetchAvatarAsBase64(cachedData.user.avatar_url);
                 }
-                
+
                 console.log('Data cached for user:', cachedData.username);
             } else {
                 console.log('Using cached data for user:', cachedData.username);
@@ -136,7 +163,10 @@
                 },
                 avatarBase64: cachedData.avatarBase64 || null
             };
-            svgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+            // SVGを生成
+            originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+            svgContent = makeResponsive(originalSvgContent); // 表示は常にレスポンシブ版
+
             console.log('SVG generated with theme:', selectedTheme);
         } catch (err) {
             console.error('Error generating stats:', err);
@@ -148,9 +178,9 @@
     }
 
     function downloadSVG() {
-        if (!svgContent) return;
+        if (!originalSvgContent) return;
 
-        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+        const blob = new Blob([originalSvgContent], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -163,12 +193,12 @@
 
     function copyUrl() {
         if (!username.trim()) return;
-        
+
         const params = new URLSearchParams();
         if (selectedTheme !== 'dark') {
             params.set('theme', selectedTheme);
         }
-        
+
         const url = `${window.location.origin}/api/stats/${encodeURIComponent(username.trim())}${params.toString() ? `?${params.toString()}` : ''}`;
         navigator.clipboard.writeText(url).then(() => {
             alert('URLをクリップボードにコピーしました！');
@@ -177,12 +207,12 @@
 
     // 前回のテーマを記録して無限ループを防ぐ
     let previousTheme = selectedTheme;
-    
+
     // テーマが変更されたときに自動再生成（キャッシュされたデータがある場合）
     $: if (cachedData && selectedTheme !== previousTheme) {
         console.log('Theme changed from', previousTheme, 'to', selectedTheme);
         previousTheme = selectedTheme;
-        
+
         // キャッシュされたデータから新しいテーマでSVGを生成
         const theme = themes[selectedTheme];
         const stats = {
@@ -204,7 +234,10 @@
             },
             avatarBase64: cachedData.avatarBase64 || null
         };
-        svgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+        // SVGを生成
+        originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
+        svgContent = makeResponsive(originalSvgContent); // 表示は常にレスポンシブ版
+
         console.log('SVG regenerated with new theme:', selectedTheme);
     }
 
@@ -242,9 +275,9 @@
 
     <div class="form-section">
         <div class="input-group">
-            <input 
-                type="text" 
-                bind:value={username} 
+            <input
+                type="text"
+                bind:value={username}
                 placeholder="GitHubユーザー名を入力 (例: octocat)"
                 on:keydown={(e) => e.key === 'Enter' && generateStats()}
             />
@@ -271,16 +304,16 @@
                 <h3>🎨 選択中のテーマ: {themes[selectedTheme].displayName}</h3>
                 <p>テーマを変更すると自動的に再生成されます</p>
             </div>
-            
+
             <div class="svg-container">
                 {@html svgContent}
             </div>
-            
+
             <div class="actions">
                 <button on:click={downloadSVG} class="download-btn">
                     📥 SVGをダウンロード
                 </button>
-                <button on:click={copyUrl} class="copy-btn">
+                <button on:click={copyUrl} class="copy-url-btn">
                     🔗 URLをコピー
                 </button>
             </div>
@@ -293,8 +326,8 @@
         <div class="theme-cards">
             {#each availableThemes as theme}
                 <div class="theme-card" class:active={selectedTheme === theme.value}>
-                    <div 
-                        class="theme-preview" 
+                    <div
+                        class="theme-preview"
                         style="background: linear-gradient(135deg, {themes[theme.value].gradients.background[0]}, {themes[theme.value].gradients.background[1]}); border-color: {themes[theme.value].colors.border};"
                         on:click={() => selectedTheme = theme.value}
                         role="button"
@@ -310,8 +343,8 @@
                             <div class="preview-bar" style="background: {themes[theme.value].colors.yellow}; width: 60%;"></div>
                         </div>
                     </div>
-                    <button 
-                        class="theme-select-btn" 
+                    <button
+                        class="theme-select-btn"
                         on:click={() => selectedTheme = theme.value}
                         class:active={selectedTheme === theme.value}
                     >
@@ -327,12 +360,40 @@
         <div class="example-cards">
             <div class="card">
                 <h4>GitHub README埋め込み</h4>
+                <button
+                    class="copy-icon-btn"
+                    on:click={() => copyToClipboard(`![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme})`, 'readme')}
+                    title="コピー"
+                >
+                    {#if copyMessage === 'readme'}
+                        ✓
+                    {:else}
+                        <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="currentColor" fill="none">
+                            <rect x="11.13" y="17.72" width="33.92" height="36.85" rx="2.5"/>
+                            <path d="M19.35,14.23V13.09a3.51,3.51,0,0,1,3.33-3.66H49.54a3.51,3.51,0,0,1,3.33,3.66V42.62a3.51,3.51,0,0,1-3.33,3.66H48.39"/>
+                        </svg>
+                    {/if}
+                </button>
                 <div class="code-block">
                     <code>![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme})</code>
                 </div>
             </div>
             <div class="card">
                 <h4>HTML埋め込み</h4>
+                <button
+                    class="copy-icon-btn"
+                    on:click={() => copyToClipboard(`<img src="https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme}" alt="Developer Score">`, 'html')}
+                    title="コピー"
+                >
+                    {#if copyMessage === 'html'}
+                        ✓
+                    {:else}
+                        <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="currentColor" fill="none">
+                            <rect x="11.13" y="17.72" width="33.92" height="36.85" rx="2.5"/>
+                            <path d="M19.35,14.23V13.09a3.51,3.51,0,0,1,3.33-3.66H49.54a3.51,3.51,0,0,1,3.33,3.66V42.62a3.51,3.51,0,0,1-3.33,3.66H48.39"/>
+                        </svg>
+                    {/if}
+                </button>
                 <div class="code-block">
                     <code>&lt;img src="https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme}" alt="Developer Score"&gt;</code>
                 </div>
@@ -345,7 +406,9 @@
                 <ul class="theme-list">
                     {#each availableThemes as theme}
                         <li>
-                            <code>theme={theme.value}</code> - {theme.label}
+                            <span><code>theme={theme.value}</code></span>
+                            <span class="theme-separator">-</span>
+                            <span>{theme.label}</span>
                         </li>
                     {/each}
                 </ul>
@@ -527,6 +590,10 @@
         transition: border-color 0.2s;
         background: white;
         color: #1f2937;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
     }
 
     .container.dark input {
@@ -546,12 +613,22 @@
         cursor: pointer;
         transition: border-color 0.2s;
         color: #1f2937;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 1.2em;
+        padding-right: 2.5rem;
     }
 
     .container.dark .theme-select {
-        background: #1e293b;
+        background-color: #1e293b;
         border-color: #475569;
         color: #f1f5f9;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f1f5f9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     }
 
     .theme-select:focus, input:focus {
@@ -696,11 +773,11 @@
         background: #047857;
     }
 
-    .copy-btn {
+    .copy-url-btn {
         background: #7c3aed;
     }
 
-    .copy-btn:hover {
+    .copy-url-btn:hover {
         background: #6d28d9;
     }
 
@@ -717,6 +794,73 @@
     .container.dark .code-block {
         background: #0f172a;
         border: 1px solid #334155;
+    }
+
+    .copy-btn {
+        position: absolute;
+        top: 50%;
+        right: 0.5rem;
+        transform: translateY(-50%);
+        padding: 0.25rem 0.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: system-ui, -apple-system, sans-serif;
+        white-space: nowrap;
+    }
+
+    .copy-icon-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        background: #9ca3af;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+
+    .copy-icon-btn:hover {
+        background: #6b7280;
+        transform: scale(1.05);
+    }
+
+    .copy-icon-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .copy-btn:hover {
+        background: #2563eb;
+    }
+
+    .container.dark .copy-btn {
+        background: #475569;
+    }
+
+    .container.dark .copy-btn:hover {
+        background: #64748b;
+    }
+
+    .container.dark .copy-icon-btn {
+        background: #475569;
+    }
+
+    .container.dark .copy-icon-btn:hover {
+        background: #64748b;
     }
 
     .examples {
@@ -882,9 +1026,15 @@
         padding: 0.25rem 0;
         font-size: 0.9rem;
         color: #4b5563;
-        display: flex;
+        display: grid;
+        grid-template-columns: 110px 20px 1fr;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0;
+    }
+
+    .theme-list li > span:first-child {
+        display: flex;
+        justify-content: flex-start;
     }
 
     .container.dark .theme-list li {
@@ -897,11 +1047,21 @@
         border-radius: 0.25rem;
         font-size: 0.8rem;
         color: #1f2937;
+        display: inline-block;
     }
 
     .container.dark .theme-list code {
         background: #334155;
         color: #e2e8f0;
+    }
+
+    .theme-separator {
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .container.dark .theme-separator {
+        color: #94a3b8;
     }
 
     .example-cards {
@@ -916,6 +1076,7 @@
         border-radius: 0.5rem;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         border: 1px solid #e5e7eb;
+        position: relative;
     }
 
     .container.dark .card {
@@ -951,8 +1112,9 @@
 
 	@media (max-width: 768px) {
         .svg-container :global(svg) {
-            transform: scale(0.85) !important;
-            transform-origin: center !important;
+            /* レスポンシブSVGを使用するのでtransformは不要 */
+            max-width: 100%;
+            height: auto;
         }
 
         .header-top {
@@ -972,11 +1134,22 @@
 
         .input-group {
             flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+
+        .input-group input,
+        .input-group .theme-select,
+        .input-group button {
+            width: 100%;
+            min-width: auto;
+            flex: none;
         }
 
         input, .theme-select {
             min-width: auto;
             width: 100%;
+            font-size: 16px; /* iOSのズーム防止 */
         }
 
         .actions {
@@ -993,22 +1166,24 @@
 
         .result-section {
             padding: 1rem;
-            margin: 0 -1rem;
+            margin: 1rem 0;
         }
 
         .svg-container {
             padding: 0.5rem;
-            min-height: 120px;
-            max-height: 180px;
+            min-height: 200px;
             overflow: hidden;
+        }
+
+        .theme-info {
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .svg-container :global(svg) {
             max-width: 100% !important;
-            width: auto !important;
+            width: 100% !important;
             height: auto !important;
-            transform: scale(0.7) !important;
-            transform-origin: center !important;
         }
 
         .example-cards {
@@ -1027,6 +1202,52 @@
         .header-top h1 {
             font-size: 1.8rem;
         }
+
+        .theme-list {
+            padding-left: 1rem;
+        }
+
+        .theme-list li {
+            grid-template-columns: 140px 20px 1fr;
+        }
+
+        .theme-list code {
+            font-size: 0.75rem;
+        }
+
+        .section h3 {
+            font-size: 1.25rem;
+        }
+
+        .button-group {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .button-group button {
+            width: 100%;
+        }
+
+        .copy-icon-btn {
+            width: 1.75rem;
+            height: 1.75rem;
+            font-size: 1rem;
+            top: 0.25rem;
+            right: 0.25rem;
+            background: #9ca3af;
+        }
+
+        .copy-icon-btn:hover {
+            background: #6b7280;
+        }
+
+        .container.dark .copy-icon-btn {
+            background: #475569;
+        }
+
+        .container.dark .copy-icon-btn:hover {
+            background: #64748b;
+        }
     }
 
     @media (max-width: 480px) {
@@ -1036,32 +1257,63 @@
 
         .result-section {
             padding: 0.75rem;
-            margin: 0 -0.75rem;
+            margin: 1rem 0;
         }
 
         .svg-container {
             padding: 0.5rem;
-            min-height: 100px;
-            max-height: 150px;
-            overflow: hidden;
+            min-height: 180px;
+            overflow: visible;
+        }
+
+        .theme-info {
+            margin-left: 0;
+            margin-right: 0;
+            padding: 0.75rem;
+        }
+
+        .actions {
+            padding: 0 0.5rem;
+        }
+
+        .actions button {
+            width: 100%;
+            margin-bottom: 0.5rem;
         }
 
         .svg-container :global(svg) {
-            transform: scale(0.6) !important;
-            transform-origin: center !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        .theme-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .theme-card-inner {
+            padding: 0.5rem;
+        }
+
+        .example-card h4 {
+            font-size: 0.9rem;
+        }
+
+        .score-info ul {
+            padding-left: 1rem;
         }
     }
 
     @media (max-width: 360px) {
         .svg-container {
-            min-height: 80px;
-            max-height: 120px;
-            overflow: hidden;
+            min-height: 150px;
+            overflow: visible;
         }
 
         .svg-container :global(svg) {
-            transform: scale(0.5) !important;
-            transform-origin: center !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: auto !important;
         }
     }
 </style>
