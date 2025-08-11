@@ -10,6 +10,7 @@
     let selectedTheme = 'dark';
     let cachedData: any = null; // GitHubデータをキャッシュ
     let darkMode = false; // ページのダークモード状態
+    let copyMessage = ''; // コピー成功メッセージ
 
     // ダークモードの初期化とローカルストレージからの読み込み
     onMount(() => {
@@ -71,6 +72,13 @@
             console.error('Error fetching avatar:', error);
             return null;
         }
+    }
+
+    function copyToClipboard(text: string, type: string) {
+        navigator.clipboard.writeText(text).then(() => {
+            copyMessage = type;
+            setTimeout(() => copyMessage = '', 2000);
+        });
     }
 
     // クライアントサイドでGitHub統計を取得する関数
@@ -327,12 +335,40 @@
         <div class="example-cards">
             <div class="card">
                 <h4>GitHub README埋め込み</h4>
+                <button 
+                    class="copy-icon-btn" 
+                    on:click={() => copyToClipboard(`![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme})`, 'readme')}
+                    title="コピー"
+                >
+                    {#if copyMessage === 'readme'}
+                        ✓
+                    {:else}
+                        <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="currentColor" fill="none">
+                            <rect x="11.13" y="17.72" width="33.92" height="36.85" rx="2.5"/>
+                            <path d="M19.35,14.23V13.09a3.51,3.51,0,0,1,3.33-3.66H49.54a3.51,3.51,0,0,1,3.33,3.66V42.62a3.51,3.51,0,0,1-3.33,3.66H48.39"/>
+                        </svg>
+                    {/if}
+                </button>
                 <div class="code-block">
                     <code>![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme})</code>
                 </div>
             </div>
             <div class="card">
                 <h4>HTML埋め込み</h4>
+                <button 
+                    class="copy-icon-btn" 
+                    on:click={() => copyToClipboard(`<img src="https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme}" alt="Developer Score">`, 'html')}
+                    title="コピー"
+                >
+                    {#if copyMessage === 'html'}
+                        ✓
+                    {:else}
+                        <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="currentColor" fill="none">
+                            <rect x="11.13" y="17.72" width="33.92" height="36.85" rx="2.5"/>
+                            <path d="M19.35,14.23V13.09a3.51,3.51,0,0,1,3.33-3.66H49.54a3.51,3.51,0,0,1,3.33,3.66V42.62a3.51,3.51,0,0,1-3.33,3.66H48.39"/>
+                        </svg>
+                    {/if}
+                </button>
                 <div class="code-block">
                     <code>&lt;img src="https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme}" alt="Developer Score"&gt;</code>
                 </div>
@@ -733,6 +769,73 @@
         border: 1px solid #334155;
     }
 
+    .copy-btn {
+        position: absolute;
+        top: 50%;
+        right: 0.5rem;
+        transform: translateY(-50%);
+        padding: 0.25rem 0.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: system-ui, -apple-system, sans-serif;
+        white-space: nowrap;
+    }
+
+    .copy-icon-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        background: #9ca3af;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+
+    .copy-icon-btn:hover {
+        background: #6b7280;
+        transform: scale(1.05);
+    }
+
+    .copy-icon-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .copy-btn:hover {
+        background: #2563eb;
+    }
+
+    .container.dark .copy-btn {
+        background: #475569;
+    }
+
+    .container.dark .copy-btn:hover {
+        background: #64748b;
+    }
+
+    .container.dark .copy-icon-btn {
+        background: #475569;
+    }
+
+    .container.dark .copy-icon-btn:hover {
+        background: #64748b;
+    }
+
     .examples {
         margin-bottom: 2rem;
     }
@@ -932,6 +1035,7 @@
         border-radius: 0.5rem;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         border: 1px solid #e5e7eb;
+        position: relative;
     }
 
     .container.dark .card {
@@ -1075,6 +1179,27 @@
 
         .button-group button {
             width: 100%;
+        }
+
+        .copy-icon-btn {
+            width: 1.75rem;
+            height: 1.75rem;
+            font-size: 1rem;
+            top: 0.25rem;
+            right: 0.25rem;
+            background: #9ca3af;
+        }
+
+        .copy-icon-btn:hover {
+            background: #6b7280;
+        }
+
+        .container.dark .copy-icon-btn {
+            background: #475569;
+        }
+
+        .container.dark .copy-icon-btn:hover {
+            background: #64748b;
         }
     }
 
