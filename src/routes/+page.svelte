@@ -313,7 +313,7 @@
                 <button on:click={downloadSVG} class="download-btn">
                     📥 SVGをダウンロード
                 </button>
-                <button on:click={copyUrl} class="copy-btn">
+                <button on:click={copyUrl} class="copy-url-btn">
                     🔗 URLをコピー
                 </button>
             </div>
@@ -773,11 +773,11 @@
         background: #047857;
     }
 
-    .copy-btn {
+    .copy-url-btn {
         background: #7c3aed;
     }
 
-    .copy-btn:hover {
+    .copy-url-btn:hover {
         background: #6d28d9;
     }
 
