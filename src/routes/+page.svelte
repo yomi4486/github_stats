@@ -20,38 +20,78 @@
     let error = '';
     let selectedTheme = 'dark';
     let cachedData: any = null; // GitHubデータをキャッシュ
-    let darkMode = false; // ページのダークモード状態
+    let themeMode: 'system' | 'dark' | 'light' = 'system'; // テーマモード
+    let darkMode = false; // 実際の表示状態
     let copyMessage = ''; // コピー成功メッセージ
+
+    // システムテーマの監視用
+    let systemMediaQuery: MediaQueryList;
 
     // ダークモードの初期化とローカルストレージからの読み込み
     onMount(() => {
-        // ローカルストレージからダークモード設定を読み込み
-        const savedDarkMode = localStorage.getItem('github-stats-dark-mode');
-        if (savedDarkMode !== null) {
-            darkMode = savedDarkMode === 'true';
-        } else {
-            // システムの設定を確認
-            darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // ローカルストレージからテーマ設定を読み込み
+        const savedThemeMode = localStorage.getItem('github-stats-theme-mode') as 'system' | 'dark' | 'light' | null;
+        if (savedThemeMode && ['system', 'dark', 'light'].includes(savedThemeMode)) {
+            themeMode = savedThemeMode;
         }
 
-        // システムの設定変更を監視
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-            if (localStorage.getItem('github-stats-dark-mode') === null) {
-                darkMode = e.matches;
+        // システムテーマの監視を設定
+        systemMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        updateDarkMode();
+
+        const handleSystemThemeChange = () => {
+            if (themeMode === 'system') {
+                updateDarkMode();
             }
         };
-        mediaQuery.addEventListener('change', handleSystemThemeChange);
+
+        systemMediaQuery.addEventListener('change', handleSystemThemeChange);
 
         return () => {
-            mediaQuery.removeEventListener('change', handleSystemThemeChange);
+            systemMediaQuery.removeEventListener('change', handleSystemThemeChange);
         };
     });
 
-    // ダークモード切り替え関数
-    function toggleDarkMode() {
-        darkMode = !darkMode;
-        localStorage.setItem('github-stats-dark-mode', darkMode.toString());
+    // テーマモードに基づいてdarkModeを更新
+    function updateDarkMode() {
+        switch (themeMode) {
+            case 'system':
+                darkMode = systemMediaQuery?.matches ?? false;
+                break;
+            case 'dark':
+                darkMode = true;
+                break;
+            case 'light':
+                darkMode = false;
+                break;
+        }
+    }
+
+    // テーマモード切り替え関数
+    function cycleThemeMode() {
+        const modes: Array<'system' | 'dark' | 'light'> = ['system', 'light', 'dark'];
+        const currentIndex = modes.indexOf(themeMode);
+        themeMode = modes[(currentIndex + 1) % modes.length];
+        
+        localStorage.setItem('github-stats-theme-mode', themeMode);
+        updateDarkMode();
+    }
+
+    // テーマモードアイコンとタイトルを取得（リアクティブに）
+    $: themeModeDisplay = (() => {
+        switch (themeMode) {
+            case 'system':
+                return { icon: '⚙️', title: 'システムテーマ (ライトモードに切り替え)' };
+            case 'light':
+                return { icon: '☀️', title: 'ライトモード (ダークモードに切り替え)' };
+            case 'dark':
+                return { icon: '🌙', title: 'ダークモード (システムテーマに切り替え)' };
+        }
+    })();
+
+    // テーマモードが変更されたときにdarkModeを更新
+    $: {
+        updateDarkMode();
     }
 
     // 利用可能なテーマを取得
@@ -253,9 +293,27 @@
     <header>
         <div class="header-top">
             <h1>🚀 GitHub Developer Score</h1>
-            <button class="theme-toggle" on:click={toggleDarkMode} title={darkMode ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}>
-                {darkMode ? '☀️' : '🌙'}
-            </button>
+            <div class="theme-controls">
+                <!-- 現在のテーマモード表示（小さく右上に） -->
+                <div class="theme-mode-indicator">
+                    <span class="mode-label">
+                        {#if themeMode === 'system'}
+                            ⚙️ システム
+                        {:else if themeMode === 'light'}
+                            ☀️ ライト
+                        {:else}
+                            🌙 ダーク
+                        {/if}
+                    </span>
+                </div>
+                <button 
+                    class="theme-toggle" 
+                    on:click={cycleThemeMode} 
+                    title={themeModeDisplay.title}
+                >
+                    {themeModeDisplay.icon}
+                </button>
+            </div>
         </div>
         <p>GitHubユーザー名を入力して、開発者スコアと統計情報をSVGで生成しよう！</p>
         <div class="score-info">
@@ -467,7 +525,23 @@
         justify-content: center;
         gap: 1rem;
         margin-bottom: 0.5rem;
-        flex-wrap: wrap;
+        position: relative;
+    }
+
+    .theme-controls {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    header h1 {
+        font-size: 2.5rem;
+        color: #2563eb;
+        margin: 0;
+        text-align: center;
     }
 
     .theme-toggle {
@@ -483,6 +557,7 @@
         justify-content: center;
         width: 2.5rem;
         height: 2.5rem;
+        position: relative;
     }
 
     .theme-toggle:hover {
@@ -499,10 +574,25 @@
         background: #334155;
     }
 
-    header h1 {
-        font-size: 2.5rem;
-        color: #2563eb;
-        margin: 0;
+    /* テーマモード表示インジケーター - 小さく右上に */
+    .theme-mode-indicator {
+        text-align: right;
+    }
+
+    .mode-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.5rem;
+        display: inline-block;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .container.dark .mode-label {
+        color: #94a3b8;
+        background: #334155;
     }
 
     .container.dark header h1 {
@@ -1117,17 +1207,12 @@
             height: auto;
         }
 
-        .header-top {
-            justify-content: space-between;
-            width: 100%;
-        }
-
         .header-top h1 {
             font-size: 2rem;
         }
     }
 
-	@media (max-width: 640px) {
+	    @media (max-width: 640px) {
         .container {
             padding: 1rem;
         }
