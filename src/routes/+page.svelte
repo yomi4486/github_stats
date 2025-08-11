@@ -407,7 +407,9 @@
                 <ul class="theme-list">
                     {#each availableThemes as theme}
                         <li>
-                            <code>theme={theme.value}</code> - {theme.label}
+                            <span><code>theme={theme.value}</code></span>
+                            <span class="theme-separator">-</span>
+                            <span>{theme.label}</span>
                         </li>
                     {/each}
                 </ul>
@@ -1025,9 +1027,15 @@
         padding: 0.25rem 0;
         font-size: 0.9rem;
         color: #4b5563;
-        display: flex;
+        display: grid;
+        grid-template-columns: 110px 20px 1fr;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0;
+    }
+
+    .theme-list li > span:first-child {
+        display: flex;
+        justify-content: flex-start;
     }
 
     .container.dark .theme-list li {
@@ -1041,12 +1049,20 @@
         font-size: 0.8rem;
         color: #1f2937;
         display: inline-block;
-        min-width: 100px;
     }
 
     .container.dark .theme-list code {
         background: #334155;
         color: #e2e8f0;
+    }
+
+    .theme-separator {
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .container.dark .theme-separator {
+        color: #94a3b8;
     }
 
     .example-cards {
@@ -1187,8 +1203,11 @@
             padding-left: 1rem;
         }
 
+        .theme-list li {
+            grid-template-columns: 140px 20px 1fr;
+        }
+
         .theme-list code {
-            min-width: 80px;
             font-size: 0.75rem;
         }
 
