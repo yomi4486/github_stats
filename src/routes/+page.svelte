@@ -2,7 +2,7 @@
     import { themes, getThemeNames, type Theme } from '$lib/themes';
     import { generateSVG } from '$lib/svg-generator';
     import { onMount } from 'svelte';
-    
+
     /**
      * SVGをレスポンシブ対応に変換する関数
      */
@@ -12,7 +12,7 @@
             'width="100%" height="100%" viewBox="0 0 $1 $2" preserveAspectRatio="xMidYMid meet"'
         );
     }
-    
+
     let username = '';
     let loading = false;
     let svgContent = ''; // 表示用のレスポンシブSVG
@@ -33,7 +33,7 @@
             // システムの設定を確認
             darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         }
-        
+
         // システムの設定変更を監視
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleSystemThemeChange = (e: MediaQueryListEvent) => {
@@ -42,7 +42,7 @@
             }
         };
         mediaQuery.addEventListener('change', handleSystemThemeChange);
-        
+
         return () => {
             mediaQuery.removeEventListener('change', handleSystemThemeChange);
         };
@@ -68,7 +68,7 @@
                 console.warn('Failed to fetch avatar image');
                 return null;
             }
-            
+
             const buffer = await response.arrayBuffer();
             const bytes = new Uint8Array(buffer);
             let binary = '';
@@ -77,7 +77,7 @@
             }
             const base64 = btoa(binary);
             const contentType = response.headers.get('content-type') || 'image/png';
-            
+
             return `data:${contentType};base64,${base64}`;
         } catch (error) {
             console.error('Error fetching avatar:', error);
@@ -109,13 +109,13 @@
                 console.log('Fetching new data from API...');
                 const params = new URLSearchParams();
                 params.set('format', 'json'); // JSONフォーマットでデータを取得
-                
+
                 const url = `/api/stats/${encodeURIComponent(username.trim())}?${params.toString()}`;
                 console.log('Fetching URL:', url);
-                
+
                 const response = await fetch(url);
                 console.log('Response status:', response.status);
-                
+
                 if (!response.ok) {
                     if (response.status === 404) {
                         throw new Error('ユーザーが見つかりませんでした');
@@ -130,13 +130,13 @@
 
                 cachedData = await response.json();
                 cachedData.username = username.trim(); // ユーザー名をキャッシュに保存
-                
+
                 // サーバー側でアバターが取得できなかった場合、クライアントサイドで再試行
                 if (!cachedData.avatarBase64 && cachedData.user?.avatar_url) {
                     console.log('Fetching avatar on client side...');
                     cachedData.avatarBase64 = await fetchAvatarAsBase64(cachedData.user.avatar_url);
                 }
-                
+
                 console.log('Data cached for user:', cachedData.username);
             } else {
                 console.log('Using cached data for user:', cachedData.username);
@@ -166,7 +166,7 @@
             // SVGを生成
             originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
             svgContent = makeResponsive(originalSvgContent); // 表示は常にレスポンシブ版
-            
+
             console.log('SVG generated with theme:', selectedTheme);
         } catch (err) {
             console.error('Error generating stats:', err);
@@ -193,12 +193,12 @@
 
     function copyUrl() {
         if (!username.trim()) return;
-        
+
         const params = new URLSearchParams();
         if (selectedTheme !== 'dark') {
             params.set('theme', selectedTheme);
         }
-        
+
         const url = `${window.location.origin}/api/stats/${encodeURIComponent(username.trim())}${params.toString() ? `?${params.toString()}` : ''}`;
         navigator.clipboard.writeText(url).then(() => {
             alert('URLをクリップボードにコピーしました！');
@@ -207,12 +207,12 @@
 
     // 前回のテーマを記録して無限ループを防ぐ
     let previousTheme = selectedTheme;
-    
+
     // テーマが変更されたときに自動再生成（キャッシュされたデータがある場合）
     $: if (cachedData && selectedTheme !== previousTheme) {
         console.log('Theme changed from', previousTheme, 'to', selectedTheme);
         previousTheme = selectedTheme;
-        
+
         // キャッシュされたデータから新しいテーマでSVGを生成
         const theme = themes[selectedTheme];
         const stats = {
@@ -237,7 +237,7 @@
         // SVGを生成
         originalSvgContent = generateSVG(stats, cachedData.avatarBase64 || null, theme);
         svgContent = makeResponsive(originalSvgContent); // 表示は常にレスポンシブ版
-        
+
         console.log('SVG regenerated with new theme:', selectedTheme);
     }
 
@@ -275,9 +275,9 @@
 
     <div class="form-section">
         <div class="input-group">
-            <input 
-                type="text" 
-                bind:value={username} 
+            <input
+                type="text"
+                bind:value={username}
                 placeholder="GitHubユーザー名を入力 (例: octocat)"
                 on:keydown={(e) => e.key === 'Enter' && generateStats()}
             />
@@ -304,11 +304,11 @@
                 <h3>🎨 選択中のテーマ: {themes[selectedTheme].displayName}</h3>
                 <p>テーマを変更すると自動的に再生成されます</p>
             </div>
-            
+
             <div class="svg-container">
                 {@html svgContent}
             </div>
-            
+
             <div class="actions">
                 <button on:click={downloadSVG} class="download-btn">
                     📥 SVGをダウンロード
@@ -326,8 +326,8 @@
         <div class="theme-cards">
             {#each availableThemes as theme}
                 <div class="theme-card" class:active={selectedTheme === theme.value}>
-                    <div 
-                        class="theme-preview" 
+                    <div
+                        class="theme-preview"
                         style="background: linear-gradient(135deg, {themes[theme.value].gradients.background[0]}, {themes[theme.value].gradients.background[1]}); border-color: {themes[theme.value].colors.border};"
                         on:click={() => selectedTheme = theme.value}
                         role="button"
@@ -343,8 +343,8 @@
                             <div class="preview-bar" style="background: {themes[theme.value].colors.yellow}; width: 60%;"></div>
                         </div>
                     </div>
-                    <button 
-                        class="theme-select-btn" 
+                    <button
+                        class="theme-select-btn"
                         on:click={() => selectedTheme = theme.value}
                         class:active={selectedTheme === theme.value}
                     >
@@ -360,8 +360,8 @@
         <div class="example-cards">
             <div class="card">
                 <h4>GitHub README埋め込み</h4>
-                <button 
-                    class="copy-icon-btn" 
+                <button
+                    class="copy-icon-btn"
                     on:click={() => copyToClipboard(`![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme})`, 'readme')}
                     title="コピー"
                 >
@@ -380,8 +380,8 @@
             </div>
             <div class="card">
                 <h4>HTML埋め込み</h4>
-                <button 
-                    class="copy-icon-btn" 
+                <button
+                    class="copy-icon-btn"
                     on:click={() => copyToClipboard(`<img src="https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme}" alt="Developer Score">`, 'html')}
                     title="コピー"
                 >
@@ -1174,7 +1174,7 @@
             min-height: 200px;
             overflow: hidden;
         }
-        
+
         .theme-info {
             margin-left: 0;
             margin-right: 0;
@@ -1265,17 +1265,17 @@
             min-height: 180px;
             overflow: visible;
         }
-        
+
         .theme-info {
             margin-left: 0;
             margin-right: 0;
             padding: 0.75rem;
         }
-        
+
         .actions {
             padding: 0 0.5rem;
         }
-        
+
         .actions button {
             width: 100%;
             margin-bottom: 0.5rem;
