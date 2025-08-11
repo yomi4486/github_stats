@@ -1158,13 +1158,18 @@
 
         .result-section {
             padding: 1rem;
-            margin: 0 -1rem;
+            margin: 1rem 0;
         }
 
         .svg-container {
             padding: 0.5rem;
             min-height: 200px;
             overflow: hidden;
+        }
+        
+        .theme-info {
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .svg-container :global(svg) {
@@ -1244,13 +1249,28 @@
 
         .result-section {
             padding: 0.75rem;
-            margin: 0 -0.75rem;
+            margin: 1rem 0;
         }
 
         .svg-container {
             padding: 0.5rem;
             min-height: 180px;
             overflow: visible;
+        }
+        
+        .theme-info {
+            margin-left: 0;
+            margin-right: 0;
+            padding: 0.75rem;
+        }
+        
+        .actions {
+            padding: 0 0.5rem;
+        }
+        
+        .actions button {
+            width: 100%;
+            margin-bottom: 0.5rem;
         }
 
         .svg-container :global(svg) {
