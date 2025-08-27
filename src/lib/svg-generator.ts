@@ -265,7 +265,8 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 				const y = 85 + index * 50;
 				const total = Object.values(languages).reduce((sum: number, val: any) => sum + val, 0);
 				const percentage = total > 0 ? ((count as number / total) * 100).toFixed(1) : '0.0';
-				const barWidth = Math.max(8, ((count as number) / Math.max(...Object.values(languages) as number[])) * 120);
+				const maxBarWidth = 180; // コンテナ幅220 - 左右マージン40
+				const barWidth = Math.max(8, ((count as number) / Math.max(...Object.values(languages) as number[])) * maxBarWidth);
 				const color = languageColors[lang] || colors.accent;
 
 				return `
@@ -273,10 +274,10 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 						<text x="0" y="0" fill="${colors.text}" font-size="14" font-weight="500">
 							${lang}
 						</text>
-						<text x="125" y="0" fill="${colors.textSecondary}" font-size="13">
+						<text x="${maxBarWidth}" y="0" fill="${colors.textSecondary}" font-size="13" text-anchor="end">
 							${percentage}%
 						</text>
-						<rect x="0" y="10" width="120" height="8" fill="${colors.border}" rx="4"/>
+						<rect x="0" y="10" width="${maxBarWidth}" height="8" fill="${colors.border}" rx="4"/>
 						<rect x="0" y="10" width="${barWidth}" height="8" fill="${color}" rx="4"/>
 					</g>
 				`;
