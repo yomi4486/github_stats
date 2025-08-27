@@ -12,6 +12,12 @@ interface GitHubRepo {
 	size: number;
 }
 
+interface ContributionStreak {
+	currentStreak: number;
+	longestStreak: number;
+	totalContributions: number;
+}
+
 // GitHub API リクエストのヘッダー設定
 function getHeaders() {
 	const headers: Record<string, string> = {
@@ -137,6 +143,94 @@ async function fetchPRCount(username: string): Promise<number> {
 	return 0;
 }
 
+async function fetchContributionStreak(username: string): Promise<ContributionStreak> {
+	try {
+		// GitHub GraphQL APIを使用してコントリビューション情報を取得
+		const query = `
+			query($username: String!) {
+				user(login: $username) {
+					contributionsCollection {
+						contributionCalendar {
+							weeks {
+								contributionDays {
+									contributionCount
+									date
+								}
+							}
+						}
+					}
+				}
+			}
+		`;
+
+		const response = await fetch('https://api.github.com/graphql', {
+			method: 'POST',
+			headers: {
+				...getHeaders(),
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				query,
+				variables: { username }
+			})
+		});
+
+		if (!response.ok) {
+			throw new Error(`GraphQL API error: ${response.status}`);
+		}
+
+		const data = await response.json();
+		
+		if (data.errors) {
+			console.warn('GraphQL errors:', data.errors);
+			return { currentStreak: 0, longestStreak: 0, totalContributions: 0 };
+		}
+
+		const weeks = data.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
+		const contributionDays = weeks.flatMap((week: any) => week.contributionDays);
+		
+		// 現在のストリークを計算
+		let currentStreak = 0;
+		let longestStreak = 0;
+		let tempStreak = 0;
+		let totalContributions = 0;
+
+		// 日付順にソート（新しい順）
+		contributionDays.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+		for (const day of contributionDays) {
+			totalContributions += day.contributionCount;
+			
+			if (day.contributionCount > 0) {
+				tempStreak++;
+				if (currentStreak === 0) {
+					currentStreak = tempStreak;
+				}
+			} else {
+				if (tempStreak > longestStreak) {
+					longestStreak = tempStreak;
+				}
+				if (currentStreak === 0) {
+					tempStreak = 0;
+				} else {
+					currentStreak = tempStreak;
+					tempStreak = 0;
+				}
+			}
+		}
+
+		// 最後のストリークもチェック
+		if (tempStreak > longestStreak) {
+			longestStreak = tempStreak;
+		}
+
+		return { currentStreak, longestStreak, totalContributions };
+	} catch (error) {
+		console.error('Failed to fetch contribution streak:', error);
+		return { currentStreak: 0, longestStreak: 0, totalContributions: 0 };
+	}
+}
+
 async function estimateCodeLines(repos: GitHubRepo[]): Promise<number> {
 	let totalLines = 0;
 
@@ -177,7 +271,7 @@ async function fetchAvatarAsBase64(avatarUrl: string): Promise<string | null> {
 	}
 }
 
-function calculateScore(stats: Omit<GitHubStats, 'score' | 'scoreBreakdown'>): { score: number; scoreBreakdown: ScoreBreakdown } {
+function calculateScore(stats: Omit<GitHubStats, 'score' | 'scoreBreakdown' | 'avatarBase64'>): { score: number; scoreBreakdown: ScoreBreakdown } {
 	// スコア計算の重み付け（行数を最重視）
 	const weights = {
 		lines: 0.4,      // 40% - 最重要
@@ -250,6 +344,9 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		// コード行数を推定
 		const totalLines = await estimateCodeLines(repos);
 
+		// コントリビュートストリークを取得
+		const contributionStreak = await fetchContributionStreak(username);
+
 		// 一時的な統計オブジェクト（スコア計算前）
 		const tempStats = {
 			user,
@@ -258,7 +355,8 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			languages,
 			totalCommits,
 			totalPRs,
-			totalLines
+			totalLines,
+			contributionStreak
 		};
 
 		// スコア計算

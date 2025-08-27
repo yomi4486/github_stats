@@ -30,6 +30,11 @@ export interface GitHubStats {
 	totalPRs: number;
 	score: number;
 	scoreBreakdown: ScoreBreakdown;
+	contributionStreak?: {
+		currentStreak: number;
+		longestStreak: number;
+		totalContributions: number;
+	};
 	avatarBase64?: string | null;
 }
 
@@ -77,8 +82,8 @@ const languageColors: Record<string, string> = {
  * GitHubスタッツからSVGを生成する共通関数
  */
 export function generateSVG(stats: GitHubStats, avatarBase64: string | null, theme: Theme): string {
-	const { user, totalStars, totalForks, totalCommits, totalPRs, totalLines, languages, score, scoreBreakdown } = stats;
-
+	const { user, totalStars, totalForks, totalCommits, totalPRs, totalLines, languages, score, scoreBreakdown, contributionStreak } = stats;
+	console.log(contributionStreak?.longestStreak);
 	// 言語を使用頻度順にソート
 	const sortedLanguages = Object.entries(languages)
 		.sort(([,a], [,b]) => (b as number) - (a as number))
@@ -119,7 +124,6 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 
 			<!-- Background -->
 			<rect width="100%" height="100%" fill="url(#bg-gradient)" rx="6"/>
-			<rect x="2" y="2" width="${width-4}" height="${height-4}" fill="none" stroke="${colors.border}" stroke-width="1" rx="10"/>
 
 			<!-- Left Section: User Info & Score -->
 			<rect x="20" y="20" width="280" height="360" fill="${colors.cardBg}" rx="4" opacity="0.5"/>
@@ -202,7 +206,7 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 			</text>
 
 			<!-- Score Bars -->
-			<g transform="translate(340, 80)">
+			<g transform="translate(340, 70)">
 				<!-- Lines Score -->
 				<text x="0" y="15" fill="${colors.text}" font-size="13" font-weight="500">
 					Lines (40%)
@@ -251,6 +255,31 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 				<rect x="0" y="185" width="${(scoreBreakdown.reposScore / 100) * 160}" height="6" fill="${colors.red}" rx="3"/>
 				<text x="165" y="190" fill="${colors.textSecondary}" font-size="12">
 					${scoreBreakdown.reposScore}
+				</text>
+			</g>
+
+			<!-- Contribution Streak Section -->
+			<text x="340" y="300" fill="${colors.accent}" font-size="18" font-weight="600">
+				🔥 Streak 
+			</text>
+
+			<g transform="translate(340, 310)">
+				<!-- Total Contributions -->
+				<rect x="0" y="0" width="90" height="40" fill="${colors.cardBg}" rx="6" opacity="0"/>
+				<text x="45" y="20" fill="${colors.text}" font-size="16" font-weight="700" text-anchor="middle">
+					${formatNumber(contributionStreak?.totalContributions as number) || 0}
+				</text>
+				<text x="45" y="34" fill="${colors.textSecondary}" font-size="11" text-anchor="middle">
+					Contributions
+				</text>
+
+				<!-- Longest Streak -->
+				<rect x="100" y="0" width="90" height="40" fill="${colors.cardBg}" rx="6" opacity="0"/>
+				<text x="145" y="20" fill="${colors.text}" font-size="16" font-weight="700" text-anchor="middle">
+					${formatNumber(contributionStreak?.longestStreak as number) || 0} days
+				</text>
+				<text x="145" y="34" fill="${colors.textSecondary}" font-size="11" text-anchor="middle">
+					Longest
 				</text>
 			</g>
 
