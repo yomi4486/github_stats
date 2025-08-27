@@ -143,6 +143,54 @@ async function fetchPRCount(username: string): Promise<number> {
 	return 0;
 }
 
+async function fetchIssueCount(username: string): Promise<number> {
+	try {
+		// GitHub Search APIを使用してIssue数の概算を取得
+		const response = await fetch(`https://api.github.com/search/issues?q=author:${username}+type:issue`, {
+			headers: getHeaders()
+		});
+
+		if (response.status === 403) {
+			console.warn('GitHub API rate limit exceeded when fetching issue count');
+			return 0; // レート制限時は0を返して処理を続行
+		}
+
+		if (response.ok) {
+			const data = await response.json();
+			return data.total_count || 0;
+		} else {
+			console.warn(`Failed to fetch issue count: ${response.status} ${response.statusText}`);
+		}
+	} catch (error) {
+		console.error('Failed to fetch issue count:', error);
+	}
+	return 0;
+}
+
+async function fetchReviewCount(username: string): Promise<number> {
+	try {
+		// GitHub Search APIを使用してレビュー数の概算を取得
+		const response = await fetch(`https://api.github.com/search/issues?q=reviewed-by:${username}+type:pr`, {
+			headers: getHeaders()
+		});
+
+		if (response.status === 403) {
+			console.warn('GitHub API rate limit exceeded when fetching review count');
+			return 0; // レート制限時は0を返して処理を続行
+		}
+
+		if (response.ok) {
+			const data = await response.json();
+			return data.total_count || 0;
+		} else {
+			console.warn(`Failed to fetch review count: ${response.status} ${response.statusText}`);
+		}
+	} catch (error) {
+		console.error('Failed to fetch review count:', error);
+	}
+	return 0;
+}
+
 async function fetchContributionStreak(username: string): Promise<ContributionStreak> {
 	try {
 		// GitHub GraphQL APIを使用してコントリビューション情報を取得
@@ -274,35 +322,39 @@ async function fetchAvatarAsBase64(avatarUrl: string): Promise<string | null> {
 function calculateScore(stats: Omit<GitHubStats, 'score' | 'scoreBreakdown' | 'avatarBase64'>): { score: number; scoreBreakdown: ScoreBreakdown } {
 	// スコア計算の重み付け（行数を最重視）
 	const weights = {
-		lines: 0.4,      // 40% - 最重要
-		stars: 0.2,      // 20%
-		followers: 0.15, // 15%
-		commits: 0.15,   // 15%
-		repos: 0.1       // 10%
+		lines: 0.4,       // 40% - 最重要
+		stars: 0.2,       // 20%
+		prsIssues: 0.15,  // 15%
+		commits: 0.15,    // 15%
+		reviews: 0.1      // 10%
 	};
+
+	// PRとIssueの合計数を計算
+	const totalPRsIssues = stats.totalPRs + (stats as any).totalIssues || 0;
+	const totalReviews = (stats as any).totalReviews || 0;
 
 	// 各項目の正規化（対数スケール使用で極端な値を調整）
 	const linesScore = Math.min(100, Math.log10(Math.max(1, stats.totalLines*0.003)) * 20);
 	const starsScore = Math.min(100, Math.log10(Math.max(1, stats.totalStars)) * 25);
-	const followersScore = Math.min(100, Math.log10(Math.max(1, stats.user.followers)) * 30);
+	const prsIssuesScore = Math.min(100, Math.log10(Math.max(1, totalPRsIssues)) * 28);
 	const commitsScore = Math.min(100, Math.log10(Math.max(1, stats.totalCommits)) * 22);
-	const reposScore = Math.min(100, Math.log10(Math.max(1, stats.user.public_repos)) * 35);
+	const reviewsScore = Math.min(100, Math.log10(Math.max(1, totalReviews)) * 30);
 
 	// 重み付きスコア計算
 	const totalScore = Math.round(
 		linesScore * weights.lines +
 		starsScore * weights.stars +
-		followersScore * weights.followers +
+		prsIssuesScore * weights.prsIssues +
 		commitsScore * weights.commits +
-		reposScore * weights.repos
+		reviewsScore * weights.reviews
 	);
 
 	const scoreBreakdown: ScoreBreakdown = {
 		linesScore: Math.round(linesScore),
 		starsScore: Math.round(starsScore),
-		followersScore: Math.round(followersScore),
+		prsIssuesScore: Math.round(prsIssuesScore),
 		commitsScore: Math.round(commitsScore),
-		reposScore: Math.round(reposScore),
+		reviewsScore: Math.round(reviewsScore),
 		totalScore
 	};
 
@@ -341,6 +393,12 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		// PR数を取得（概算）
 		const totalPRs = await fetchPRCount(username);
 
+		// Issue数を取得（概算）
+		const totalIssues = await fetchIssueCount(username);
+
+		// レビュー数を取得（概算）
+		const totalReviews = await fetchReviewCount(username);
+
 		// コード行数を推定
 		const totalLines = await estimateCodeLines(repos);
 
@@ -355,6 +413,8 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			languages,
 			totalCommits,
 			totalPRs,
+			totalIssues,
+			totalReviews,
 			totalLines,
 			contributionStreak
 		};
