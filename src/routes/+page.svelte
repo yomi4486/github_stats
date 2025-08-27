@@ -196,9 +196,9 @@
                 scoreBreakdown: cachedData.scoreBreakdown || {
                     linesScore: 0,
                     starsScore: 0,
-                    followersScore: 0,
+                    prsIssuesScore: 0,
                     commitsScore: 0,
-                    reposScore: 0,
+                    reviewsScore: 0,
                     totalScore: 0
                 },
                 contributionStreak: cachedData.contributionStreak || {
@@ -272,9 +272,9 @@
             scoreBreakdown: cachedData.scoreBreakdown || {
                 linesScore: 0,
                 starsScore: 0,
-                followersScore: 0,
+                prsIssuesScore: 0,
                 commitsScore: 0,
-                reposScore: 0,
+                reviewsScore: 0,
                 totalScore: 0
             },
             contributionStreak: cachedData.contributionStreak || {
@@ -334,9 +334,9 @@
             <ul>
                 <li>📝 <strong>コード行数 (40%)</strong> - 実際に書いたコードの総行数</li>
                 <li>🌟 <strong>スター数 (20%)</strong> - リポジトリが獲得したスター</li>
-                <li>👥 <strong>フォロワー (15%)</strong> - GitHubフォロワー数</li>
+                <li>� <strong>PRs/Issues (15%)</strong> - プルリクエストとIssueの合計数</li>
                 <li>💻 <strong>コミット数 (15%)</strong> - 総コミット数</li>
-                <li>📦 <strong>リポジトリ数 (10%)</strong> - パブリックリポジトリ数</li>
+                <li>� <strong>レビュー数 (10%)</strong> - 行ったコードレビュー数</li>
             </ul>
         </div>
     </header>

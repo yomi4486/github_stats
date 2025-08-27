@@ -14,9 +14,9 @@ export interface GitHubUser {
 export interface ScoreBreakdown {
 	linesScore: number;
 	starsScore: number;
-	followersScore: number;
+	prsIssuesScore: number;
 	commitsScore: number;
-	reposScore: number;
+	reviewsScore: number;
 	totalScore: number;
 }
 
@@ -227,14 +227,14 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 					${scoreBreakdown.starsScore}
 				</text>
 
-				<!-- Followers Score -->
+				<!-- PRs/Issues Score -->
 				<text x="0" y="95" fill="${colors.text}" font-size="13" font-weight="500">
-					Followers (15%)
+					PRs/Issues (15%)
 				</text>
 				<rect x="0" y="105" width="160" height="6" fill="${colors.border}" rx="3"/>
-				<rect x="0" y="105" width="${(scoreBreakdown.followersScore / 100) * 160}" height="6" fill="${colors.purple}" rx="3"/>
+				<rect x="0" y="105" width="${(scoreBreakdown.prsIssuesScore / 100) * 160}" height="6" fill="${colors.purple}" rx="3"/>
 				<text x="165" y="110" fill="${colors.textSecondary}" font-size="12">
-					${scoreBreakdown.followersScore}
+					${scoreBreakdown.prsIssuesScore}
 				</text>
 
 				<!-- Commits Score -->
@@ -247,14 +247,14 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 					${scoreBreakdown.commitsScore}
 				</text>
 
-				<!-- Repos Score -->
+				<!-- Reviews Score -->
 				<text x="0" y="175" fill="${colors.text}" font-size="13" font-weight="500">
-					Repos (10%)
+					Reviews (10%)
 				</text>
 				<rect x="0" y="185" width="160" height="6" fill="${colors.border}" rx="3"/>
-				<rect x="0" y="185" width="${(scoreBreakdown.reposScore / 100) * 160}" height="6" fill="${colors.red}" rx="3"/>
+				<rect x="0" y="185" width="${(scoreBreakdown.reviewsScore / 100) * 160}" height="6" fill="${colors.red}" rx="3"/>
 				<text x="165" y="190" fill="${colors.textSecondary}" font-size="12">
-					${scoreBreakdown.reposScore}
+					${scoreBreakdown.reviewsScore}
 				</text>
 			</g>
 
