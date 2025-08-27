@@ -201,6 +201,11 @@
                     reposScore: 0,
                     totalScore: 0
                 },
+                contributionStreak: cachedData.contributionStreak || {
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    totalContributions: 0
+                },
                 avatarBase64: cachedData.avatarBase64 || null
             };
             // SVGを生成
@@ -271,6 +276,11 @@
                 commitsScore: 0,
                 reposScore: 0,
                 totalScore: 0
+            },
+            contributionStreak: cachedData.contributionStreak || {
+                currentStreak: 0,
+                longestStreak: 0,
+                totalContributions: 0
             },
             avatarBase64: cachedData.avatarBase64 || null
         };
