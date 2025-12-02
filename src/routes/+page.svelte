@@ -20,6 +20,7 @@
     let error = '';
     let selectedTheme = 'dark';
     let cachedData: any = null; // GitHubデータをキャッシュ
+    let includeStreak = false; // ストリークを取得するかどうか（デフォルト: false）
     let themeMode: 'system' | 'dark' | 'light' = 'system'; // テーマモード
     let darkMode = false; // 実際の表示状態
     let copyMessage = ''; // コピー成功メッセージ
@@ -144,11 +145,12 @@
         error = '';
 
         try {
-            // キャッシュされたデータがない場合のみAPIリクエストを送信
-            if (!cachedData || cachedData.username !== username.trim()) {
+            // キャッシュされたデータがない場合、またはユーザー名/ストリーク設定が変わった場合にAPIリクエストを送信
+            if (!cachedData || cachedData.username !== username.trim() || cachedData.streakRequested !== includeStreak) {
                 console.log('Fetching new data from API...');
                 const params = new URLSearchParams();
                 params.set('format', 'json'); // JSONフォーマットでデータを取得
+                if (includeStreak) params.set('streak', 'true');
 
                 const url = `/api/stats/${encodeURIComponent(username.trim())}?${params.toString()}`;
                 console.log('Fetching URL:', url);
@@ -170,6 +172,9 @@
 
                 cachedData = await response.json();
                 cachedData.username = username.trim(); // ユーザー名をキャッシュに保存
+                cachedData.streakRequested = includeStreak; // どの設定で取得したかを保存
+
+                console.log('Streak requested:', includeStreak);
 
                 // サーバー側でアバターが取得できなかった場合、クライアントサイドで再試行
                 if (!cachedData.avatarBase64 && cachedData.user?.avatar_url) {
@@ -243,6 +248,8 @@
         if (selectedTheme !== 'dark') {
             params.set('theme', selectedTheme);
         }
+
+        if (includeStreak) params.set('streak', 'true');
 
         const url = `${window.location.origin}/api/stats/${encodeURIComponent(username.trim())}${params.toString() ? `?${params.toString()}` : ''}`;
         navigator.clipboard.writeText(url).then(() => {
@@ -354,6 +361,16 @@
                     <option value={theme.value}>{theme.label}</option>
                 {/each}
             </select>
+            <div class="control-box">
+                <label class="streak-label" aria-label="ストリークを表示">
+                    <input
+                        type="checkbox"
+                        bind:checked={includeStreak}
+                        class="streak-checkbox"
+                    />
+                    <span>ストリークを表示</span>
+                </label>
+            </div>
             <button on:click={generateStats} disabled={loading}>
                 {loading ? '生成中...' : '統計生成'}
             </button>
@@ -430,7 +447,7 @@
                 <h4>GitHub README埋め込み</h4>
                 <button
                     class="copy-icon-btn"
-                    on:click={() => copyToClipboard(`![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme})`, 'readme')}
+                    on:click={() => copyToClipboard(`![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme}${includeStreak ? '&streak=true' : ''})`, 'readme')}
                     title="コピー"
                 >
                     {#if copyMessage === 'readme'}
@@ -443,14 +460,14 @@
                     {/if}
                 </button>
                 <div class="code-block">
-                    <code>![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme})</code>
+                    <code>![Developer Score](https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme}{includeStreak ? '&streak=true' : ''})</code>
                 </div>
             </div>
             <div class="card">
                 <h4>HTML埋め込み</h4>
                 <button
                     class="copy-icon-btn"
-                    on:click={() => copyToClipboard(`<img src="https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme}" alt="Developer Score">`, 'html')}
+                    on:click={() => copyToClipboard(`<img src="https://github-stats-eta-two.vercel.app/api/stats/${username}?theme=${selectedTheme}${includeStreak ? '&streak=true' : ''}" alt="Developer Score">`, 'html')}
                     title="コピー"
                 >
                     {#if copyMessage === 'html'}
@@ -463,7 +480,7 @@
                     {/if}
                 </button>
                 <div class="code-block">
-                    <code>&lt;img src="https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme}" alt="Developer Score"&gt;</code>
+                    <code>&lt;img src="https://github-stats-eta-two.vercel.app/api/stats/{username}?theme={selectedTheme}{includeStreak ? '&streak=true' : ''}" alt="Developer Score"&gt;</code>
                 </div>
                 <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
                     Webサイトやポートフォリオに
@@ -680,9 +697,56 @@
         flex-wrap: wrap;
     }
 
+    /* Small control box to visually match other inputs/buttons */
+    .control-box {
+        display: flex;
+        align-items: center;
+        padding: 0.4rem 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        background: white;
+        box-sizing: border-box;
+        flex: 0 0 auto;
+        justify-content: center;
+    }
+
+    .container.dark .control-box {
+        background: #1e293b;
+        border-color: #475569;
+    }
+
+    .streak-label {
+        display: flex;
+        align-items: center;
+        color: #9ca3af;
+        font-size: 0.95rem;
+        cursor: pointer;
+        margin: 0;
+        gap: 0.5rem;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .streak-checkbox {
+        width: 18px;
+        height: 18px;
+        /* Ensure native checkbox rendering even if global input rules override appearance */
+        appearance: auto !important;
+        -webkit-appearance: checkbox !important;
+        -moz-appearance: checkbox !important;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        vertical-align: middle;
+        accent-color: #2563eb;
+        /* Prevent generic `input` rules from making the checkbox stretch */
+        flex: 0 0 auto;
+        min-width: auto;
+    }
+
     input {
-        flex: 2;
-        min-width: 250px;
+        flex: 1 1 420px;
+        min-width: 240px;
         padding: 0.75rem 1rem;
         border: 2px solid #e5e7eb;
         border-radius: 0.5rem;
@@ -703,8 +767,7 @@
     }
 
     .theme-select {
-        flex: 1;
-        min-width: 150px;
+        flex: 0 0 160px;
         padding: 0.75rem 1rem;
         border: 2px solid #e5e7eb;
         border-radius: 0.5rem;
@@ -734,6 +797,10 @@
     .theme-select:focus, input:focus {
         outline: none;
         border-color: #2563eb;
+    }
+
+    .input-group button {
+        flex: 0 0 auto;
     }
 
     .container.dark .theme-select:focus,
@@ -896,23 +963,6 @@
         border: 1px solid #334155;
     }
 
-    .copy-btn {
-        position: absolute;
-        top: 50%;
-        right: 0.5rem;
-        transform: translateY(-50%);
-        padding: 0.25rem 0.5rem;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-family: system-ui, -apple-system, sans-serif;
-        white-space: nowrap;
-    }
-
     .copy-icon-btn {
         position: absolute;
         top: 0.5rem;
@@ -941,18 +991,6 @@
     .copy-icon-btn svg {
         width: 16px;
         height: 16px;
-    }
-
-    .copy-btn:hover {
-        background: #2563eb;
-    }
-
-    .container.dark .copy-btn {
-        background: #475569;
-    }
-
-    .container.dark .copy-btn:hover {
-        background: #64748b;
     }
 
     .container.dark .copy-icon-btn {
@@ -1310,19 +1348,6 @@
             font-size: 0.75rem;
         }
 
-        .section h3 {
-            font-size: 1.25rem;
-        }
-
-        .button-group {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .button-group button {
-            width: 100%;
-        }
-
         .copy-icon-btn {
             width: 1.75rem;
             height: 1.75rem;
@@ -1384,14 +1409,6 @@
 
         .theme-cards {
             grid-template-columns: 1fr;
-        }
-
-        .theme-card-inner {
-            padding: 0.5rem;
-        }
-
-        .example-card h4 {
-            font-size: 0.9rem;
         }
 
         .score-info ul {
