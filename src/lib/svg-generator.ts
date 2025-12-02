@@ -97,6 +97,34 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 
 	const scoreInfo = getScoreInfo(score);
 
+	// Contribution streak section is optional: only render when data is provided
+	const streakSection = (contributionStreak?.currentStreak as number > 0 && contributionStreak?.longestStreak as number > 0) ? `
+			<!-- Contribution Streak Section -->
+			<text x="340" y="300" fill="${colors.accent}" font-size="18" font-weight="600">
+				🔥 Streak 
+			</text>
+
+			<g transform="translate(340, 310)">
+				<!-- Total Contributions -->
+				<rect x="0" y="0" width="90" height="40" fill="${colors.cardBg}" rx="6" opacity="0"/>
+				<text x="45" y="20" fill="${colors.text}" font-size="16" font-weight="700" text-anchor="middle">
+					${formatNumber(contributionStreak?.totalContributions ?? 0)}
+				</text>
+				<text x="45" y="34" fill="${colors.textSecondary}" font-size="11" text-anchor="middle">
+					Contributions
+				</text>
+
+				<!-- Longest Streak -->
+				<rect x="100" y="0" width="90" height="40" fill="${colors.cardBg}" rx="6" opacity="0"/>
+				<text x="145" y="20" fill="${colors.text}" font-size="16" font-weight="700" text-anchor="middle">
+					${formatNumber(contributionStreak?.longestStreak ?? 0)} days
+				</text>
+				<text x="145" y="34" fill="${colors.textSecondary}" font-size="11" text-anchor="middle">
+					Longest
+				</text>
+			</g>
+		` : '';
+
 	return `
 		<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 			<defs>
@@ -258,30 +286,7 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 				</text>
 			</g>
 
-			<!-- Contribution Streak Section -->
-			<text x="340" y="300" fill="${colors.accent}" font-size="18" font-weight="600">
-				🔥 Streak 
-			</text>
-
-			<g transform="translate(340, 310)">
-				<!-- Total Contributions -->
-				<rect x="0" y="0" width="90" height="40" fill="${colors.cardBg}" rx="6" opacity="0"/>
-				<text x="45" y="20" fill="${colors.text}" font-size="16" font-weight="700" text-anchor="middle">
-					${formatNumber(contributionStreak?.totalContributions as number) || 0}
-				</text>
-				<text x="45" y="34" fill="${colors.textSecondary}" font-size="11" text-anchor="middle">
-					Contributions
-				</text>
-
-				<!-- Longest Streak -->
-				<rect x="100" y="0" width="90" height="40" fill="${colors.cardBg}" rx="6" opacity="0"/>
-				<text x="145" y="20" fill="${colors.text}" font-size="16" font-weight="700" text-anchor="middle">
-					${formatNumber(contributionStreak?.longestStreak as number) || 0} days
-				</text>
-				<text x="145" y="34" fill="${colors.textSecondary}" font-size="11" text-anchor="middle">
-					Longest
-				</text>
-			</g>
+			${streakSection}
 
 			<!-- Right Section: Languages -->
 			<rect x="560" y="20" width="220" height="360" fill="${colors.cardBg}" rx="8" opacity="0.5"/>

@@ -402,11 +402,15 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		// コード行数を推定
 		const totalLines = await estimateCodeLines(repos);
 
-		// コントリビュートストリークを取得
-		const contributionStreak = await fetchContributionStreak(username);
+		// ストリーク情報はデフォルトで取得しない（?streak=true の場合のみ取得）
+		const shouldFetchStreak = url.searchParams.get('streak') === 'true';
+		let contributionStreak: ContributionStreak | undefined = undefined;
+		if (shouldFetchStreak) {
+			contributionStreak = await fetchContributionStreak(username);
+		}
 
 		// 一時的な統計オブジェクト（スコア計算前）
-		const tempStats = {
+		const tempStats: any = {
 			user,
 			totalStars,
 			totalForks,
@@ -415,9 +419,11 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			totalPRs,
 			totalIssues,
 			totalReviews,
-			totalLines,
-			contributionStreak
+			totalLines
 		};
+		if (contributionStreak) {
+			tempStats.contributionStreak = contributionStreak;
+		}
 
 		// スコア計算
 		const { score, scoreBreakdown } = calculateScore(tempStats);
