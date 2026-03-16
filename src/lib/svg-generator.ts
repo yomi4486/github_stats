@@ -61,6 +61,15 @@ function formatNumber(num: number): string {
 	return num.toString();
 }
 
+function truncateText(text: string, maxLength: number): string {
+	const chars = Array.from(text ?? '');
+	if (chars.length <= maxLength) {
+		return text;
+	}
+
+	return `${chars.slice(0, maxLength - 1).join('')}…`;
+}
+
 // 言語の色マッピング
 const languageColors: Record<string, string> = {
 	JavaScript: '#f1e05a',
@@ -84,6 +93,8 @@ const languageColors: Record<string, string> = {
 export function generateSVG(stats: GitHubStats, avatarBase64: string | null, theme: Theme): string {
 	const { user, totalStars, totalForks, totalCommits, totalPRs, totalLines, languages, score, scoreBreakdown, contributionStreak } = stats;
 	console.log(contributionStreak?.longestStreak);
+	const displayName = truncateText(user.name || user.login, 17);
+	const displayLogin = truncateText(user.login, 21);
 	// 言語を使用頻度順にソート
 	const sortedLanguages = Object.entries(languages)
 		.sort(([,a], [,b]) => (b as number) - (a as number))
@@ -172,10 +183,10 @@ export function generateSVG(stats: GitHubStats, avatarBase64: string | null, the
 
 			<!-- User Info -->
 			<text x="90" y="55" fill="${colors.text}" font-size="20" font-weight="700" text-anchor="start">
-				${user.name || user.login}
+				${displayName}
 			</text>
 			<text x="90" y="75" fill="${colors.textSecondary}" font-size="15" text-anchor="start">
-				@${user.login}
+				@${displayLogin}
 			</text>
 
             <!-- Score Display -->
