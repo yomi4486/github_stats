@@ -84,7 +84,18 @@ const languageColors: Record<string, string> = {
 	CSS: '#563d7c',
 	Vue: '#4FC08D',
 	React: '#61dafb',
-	Svelte: '#ff3e00'
+	Svelte: '#ff3e00',
+	PHP: '#4F5D95',
+	Ruby: '#701516',
+	Swift: '#ffac45',
+	Kotlin: '#A97BFF',
+	Dart: '#00B4AB',
+	Scala: '#c22d40',
+	Shell: '#89e051',
+	Bash: '#89e051',
+	PowerShell: '#012456',
+	ObjectiveC: '#438eff',
+	ObjectiveCPP: '#6866fb',
 };
 
 /**
