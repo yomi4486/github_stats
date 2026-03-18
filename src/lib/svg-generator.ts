@@ -90,12 +90,32 @@ const languageColors: Record<string, string> = {
 	Swift: '#ffac45',
 	Kotlin: '#A97BFF',
 	Dart: '#00B4AB',
+	Flutter: '#02569B',
 	Scala: '#c22d40',
 	Shell: '#89e051',
 	Bash: '#89e051',
 	PowerShell: '#012456',
 	ObjectiveC: '#438eff',
 	ObjectiveCPP: '#6866fb',
+	SCSS: '#c6538c',
+	Sass: '#a53b70',
+	Less: '#1d365d',
+	Stylus: '#ff6347',
+	Assembly: '#6E4C13',
+	Zig: '#ec915c',
+	Nim: '#ffc200',
+	V: '#4f87c4',
+	JSON: '#292929',
+	YAML: '#cb171e',
+	TOML: '#9c4221',
+	XML: '#0060ac',
+	Markdown: '#083fa1',
+	R: '#198CE7',
+	MATLAB: '#e16737',
+	Haskell: '#5e5086',
+	Elixir: '#6e4a7e',
+	Clojure: '#db5855'
+
 };
 
 /**
