@@ -79,9 +79,15 @@ const languageColors: Record<string, string> = {
 	Go: '#00ADD8',
 	Rust: '#dea584',
 	C: '#555555',
+	CSharp: '#178600',
 	'C++': '#f34b7d',
+	FSharp: '#b845fc',
 	HTML: '#e34c26',
 	CSS: '#563d7c',
+	Astro: '#ff5a03',
+	SolidJS: '#2c4f7c',
+	AlpineJS: '#8bc0d0',
+	HTMX: '#3366cc',
 	Vue: '#4FC08D',
 	React: '#61dafb',
 	Svelte: '#ff3e00',
@@ -114,7 +120,13 @@ const languageColors: Record<string, string> = {
 	MATLAB: '#e16737',
 	Haskell: '#5e5086',
 	Elixir: '#6e4a7e',
-	Clojure: '#db5855'
+	Clojure: '#db5855',
+	Dockerfile: '#384d54',
+	Makefile: '#427819',
+	Terraform: '#844fba',
+	Nginx: '#009639',
+	JupyterNotebook: '#DA5B0B',
+	SQL: '#e38c00'
 
 };
 
